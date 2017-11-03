@@ -1,0 +1,155 @@
+{
+    "AWSTemplateFormatVersion" : "2010-09-09",
+    "Description" : "Aviatrix Systems - Creates the necessary lambdas necessary to configure the controller",
+    "Metadata" :
+    {
+      "AWS::CloudFormation::Interface" :
+      {
+        "ParameterGroups" : [ { "Label" : { "default" : "Lambda Required Parameters" }, "Parameters" : [ "controllerip", "username", "privateip",  "adminemail", "password", "Account", "AviatrixRoleApp",  "AviatrixRoleEC2", "VPC", "Subnet", "GatewaySizeParam"] } ]
+      }
+    },
+    "Parameters":
+    {
+      "controllerip": { "Type": "String", "Description": "IP of the controller" },
+      "username": {  "Type": "String", "Description": "Username for the controller" },
+      "privateip": { "Type": "String", "Description": "Private IP of the controller" },
+      "adminemail": { "Type": "String", "Description": "Email of the controller admin" },
+      "password": { "Type": "String", "Description": "Password for the controller" },
+      "Account": { "Type": "String", "Description": "AWS Account" },
+      "AviatrixRoleApp": { "Type": "String", "Description": "ARN for aviatrix-role-app" },
+      "AviatrixRoleEC2": { "Type": "String", "Description": "ARN for aviatrix-role-ec2" },
+      "VPC" : { "Type": "String", "Description": "VPC to deploy the Controller and Hub Gateway" },
+      "Subnet" : { "Type": "String", "Description": "Subnet to deploy the Controller and Hub Gateway" },
+      "GatewaySizeParam":
+      {
+        "Type" : "String",
+        "Default" : "t2.small",
+        "AllowedValues" : ["t2.small", "t2.large", "m3.medium","m3.large","m3.xlarge","m4.large","m4.xlarge","c4.large","c4.xlarge"],
+        "Description" : "Select an instance size. Default is t2.small."
+      }
+    },
+    "Resources" :
+    {
+      "S3Bucket": {
+          "Type": "AWS::S3::Bucket",
+          "Properties": {
+              "AccessControl": "Private",
+              "WebsiteConfiguration": {
+                  "IndexDocument": "index.html",
+                  "ErrorDocument": "error.html"
+              }
+          },
+          "DeletionPolicy": "Retain"
+      },
+      "AviatrixRoleAPI" :
+      {
+        "Type": "AWS::IAM::Role",
+        "Properties": {
+           "RoleName": "aviatrix-role-api",
+           "AssumeRolePolicyDocument": {
+              "Version" : "2012-10-17",
+              "Statement": [ {
+                 "Effect": "Allow",
+                 "Principal": {
+                    "Service": [
+                      "lambda.amazonaws.com",
+                      "edgelambda.amazonaws.com"
+                    ]
+                 },
+                 "Action": [ "sts:AssumeRole" ]
+              } ]
+           },
+           "Path": "/service-role/"
+         }
+     },
+     "AviatrixAPIRolePolicy" :
+     {
+       "Type" : "AWS::IAM::ManagedPolicy",
+       "Properties" :
+       {
+         "ManagedPolicyName" : "aviatrix-api-role-policy",
+         "Description" : "Policy for creating aviatrix-api-role-policy",
+         "Path" : "/service-role/",
+         "PolicyDocument" :
+         {
+           "Version": "2012-10-17",
+           "Statement": [
+               {
+                   "Effect": "Allow",
+                   "Action": [
+                         "logs:CreateLogGroup",
+                         "logs:CreateLogStream",
+                         "logs:PutLogEvents"
+                   ],
+                   "Resource": "arn:aws:logs:*:*:*"
+               }
+           ]
+         },
+         "Roles" :
+         [ {
+           "Ref": "AviatrixRoleAPI"
+         } ]
+       }
+     },
+    "AviatrixFirstRunLambda": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Handler": "aviatrix_controller_first_run.handler",
+        "Role": { "Fn::GetAtt" : ["AviatrixRoleAPI", "Arn"] },
+        "Code": {
+          "S3Bucket": "quickstart-aviatrix",
+          "S3Key": "aviatrix_controller_first_run.py.zip"
+        },
+        "Environment":
+        {
+          "Variables":
+          {
+            "controller_ip": { "Ref": "controllerip" },
+            "username": { "Ref": "username" },
+            "private_ip": { "Ref": "privateip" },
+            "admin_email": { "Ref": "adminemail" },
+            "password": { "Ref": "password" },
+            "Account" : { "Ref": "Account" },
+            "AviatrixRoleApp" : { "Ref": "AviatrixRoleApp" },
+            "AviatrixRoleEC2" : { "Ref": "AviatrixRoleEC2" },
+            "VPC" : { "Ref": "VPC" },
+            "Subnet" : { "Ref": "Subnet" },
+            "Region": { "Ref" : "AWS::Region" },
+            "GatewaySizeParam" : { "Ref": "GatewaySizeParam" },
+            "first_run": "true"
+          }
+        },
+        "Runtime": "python2.7",
+        "Timeout": "300"
+      }
+    }
+  },
+  "Outputs": {
+    "WebsiteURL": {
+        "Value": {
+            "Fn::GetAtt": [
+                "S3Bucket",
+                "WebsiteURL"
+            ]
+        },
+        "Description": "URL for website hosted on S3"
+    },
+    "S3BucketSecureURL": {
+        "Value": {
+            "Fn::Join": [
+                "",
+                [
+                    "https://",
+                    {
+                        "Fn::GetAtt": [
+                            "S3Bucket",
+                            "DomainName"
+                        ]
+                    }
+                ]
+            ]
+        },
+        "Description": "Name of S3 bucket to hold website content"
+          }
+  }
+ }
