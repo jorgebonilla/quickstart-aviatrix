@@ -1,5 +1,5 @@
 #copy paste this into lamdba
-import os, urllib, ssl, json, logging
+import os, sys, urllib, ssl, json, logging, boto3
 from urllib2 import Request, urlopen, URLError
 from time import sleep
 
@@ -20,6 +20,7 @@ class Aviatrix:
     def avx_api_call(self,method,action,parameters):
         url = "https://%s/v1/api?action=%s" % (self.controller_ip,action)
         for key,value in parameters.iteritems():
+            value = urllib.quote(value, safe='')
             url = url + "&%s=%s" % (key,value)
         self.url = url
         logger.info("Executing API call:%s" % self.url)
@@ -82,6 +83,19 @@ class Aviatrix:
                                                         "vpc_reg": vpc_region,
                                                         "vpc_size": vpc_size,
                                                         "vpc_net": vpc_net })
+    def delete_gateway(self,cloud_type,gw_name):
+        self.avx_api_call("GET","delete_container", { "CID": self.CID,
+                                                      "cloud_type": cloud_type,
+                                                      "gw_name": gw_name })
+    def peering(self,vpc_name1,vpc_name2):
+        self.avx_api_call("GET","peer_vpc_pair", { "CID": self.CID,
+                                                   "vpc_name1": vpc_name1,
+                                                   "vpc_name2": vpc_name2 })
+    def unpeering(self,vpc_name1,vpc_name2):
+        self.avx_api_call("GET","unpeer_vpc_pair", { "CID": self.CID,
+                                                   "vpc_name1": vpc_name1,
+                                                   "vpc_name2": vpc_name2 })
+
 
 def handler(event,context):
     #Read environment Variables
@@ -93,21 +107,26 @@ def handler(event,context):
     account = os.environ.get("Account")
     AviatrixRoleApp = os.environ.get("AviatrixRoleApp")
     AviatrixRoleEC2 = os.environ.get("AviatrixRoleEC2")
-    vpc = os.environ.get("VPC")
-    subnet = os.environ.get("Subnet")
-    region = os.environ.get("Region")
-    gwsize = os.environ.get("GatewaySizeParam")
+    vpc_hub = os.environ.get("VPC")
+    subnet_hub = os.environ.get("Subnet")
+    region_hub = os.environ.get("Region")
+    gwsize_hub = os.environ.get("GatewaySizeParam")
+    first_run = os.environ.get("first_run")
+    setup_run = os.environ.get("setup_run")
 
-    # #Controller Pre-configuration
+
     controller = Aviatrix(controller_ip)
     controller.login(username,private_ip)
     controller.admin_email(admin_email)
     controller.change_password(username,username,private_ip,password)
     controller.login(username,password)
     controller.initial_setup("run")
+    logger.info('Done with Initial Controller Setup')
 
     # #Account Setup
     # #this step will not be needed with the Marketplace AMI
+    controller = Aviatrix(controller_ip)
+    controller.login(username,password)
     controller.setup_customer_id("jorge-trial-1495122121.16")
 
     controller.setup_account_profile("AWSAccount",
@@ -119,8 +138,9 @@ def handler(event,context):
                                      AviatrixRoleEC2)
     controller.create_gateway("AWSAccount",
                               "1",
-                              "TransitHubGW",
-                              vpc,
-                              region,
-                              gwsize,
-                              subnet)
+                              "hub-" +vpc_hub,
+                              vpc_hub,
+                              region_hub,
+                              gwsize_hub,
+                              subnet_hub)
+    logger.info('Done with Hub Deployment')

@@ -30,17 +30,6 @@
     },
     "Resources" :
     {
-      "S3Bucket": {
-          "Type": "AWS::S3::Bucket",
-          "Properties": {
-              "AccessControl": "Private",
-              "WebsiteConfiguration": {
-                  "IndexDocument": "index.html",
-                  "ErrorDocument": "error.html"
-              }
-          },
-          "DeletionPolicy": "Retain"
-      },
       "AviatrixRoleAPI" :
       {
         "Type": "AWS::IAM::Role",
@@ -79,9 +68,11 @@
                    "Action": [
                          "logs:CreateLogGroup",
                          "logs:CreateLogStream",
-                         "logs:PutLogEvents"
+                         "logs:PutLogEvents",
+                         "ec2:Describe*",
+                         "ec2:CreateTags"
                    ],
-                   "Resource": "arn:aws:logs:*:*:*"
+                   "Resource": "*",
                }
            ]
          },
@@ -91,6 +82,51 @@
          } ]
        }
      },
+     "AviatrixKey" : {
+       "Type" : "AWS::KMS::Key",
+       "Properties" : {
+         "Description" : "Key to encrypt Aviatrix Data",
+         "KeyPolicy" : {
+           "Version": "2012-10-17",
+           "Id": "key-default-1",
+           "Statement": [
+                 {
+                   "Sid": "Enable IAM User Permissions",
+                   "Effect": "Allow",
+                   "Principal": {
+                     "AWS": [
+                       { "Fn::Join" : [ "", [ "arn:aws:iam::", { "Ref" : "AWS::AccountId" }, ":root" ] ] }
+                     ]
+                   },
+                   "Action": "kms:*",
+                   "Resource": "*"
+                 },
+                 {
+                   "Sid": "Allow use of the key",
+                   "Effect": "Allow",
+                   "Principal": {
+                     "AWS": [ { "Fn::GetAtt" : ["AviatrixRoleAPI", "Arn"] } ]
+                   },
+                   "Action": [
+                     "kms:Encrypt",
+                     "kms:Decrypt",
+                     "kms:ReEncrypt*",
+                     "kms:GenerateDataKey*",
+                     "kms:DescribeKey"
+                   ],
+                   "Resource": "*"
+                 },
+           ]
+         }
+       }
+     },
+     "AviatrixKeyAlias" : {
+        "Type" : "AWS::KMS::Alias",
+        "Properties" : {
+          "AliasName" : "alias/AviatrixKey",
+          "TargetKeyId" : {"Ref":"AviatrixKey"}
+        }
+    },
     "AviatrixFirstRunLambda": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
@@ -100,6 +136,7 @@
           "S3Bucket": "quickstart-aviatrix",
           "S3Key": "aviatrix_controller_first_run.py.zip"
         },
+        "KmsKeyArn": { "Fn::GetAtt" : ["AviatrixKey", "Arn"] },
         "Environment":
         {
           "Variables":
@@ -116,40 +153,76 @@
             "Subnet" : { "Ref": "Subnet" },
             "Region": { "Ref" : "AWS::Region" },
             "GatewaySizeParam" : { "Ref": "GatewaySizeParam" },
-            "first_run": "true"
+            "first_run": "true",
+            "setup_run": "true"
           }
         },
         "Runtime": "python2.7",
         "Timeout": "300"
       }
-    }
-  },
-  "Outputs": {
-    "WebsiteURL": {
-        "Value": {
-            "Fn::GetAtt": [
-                "S3Bucket",
-                "WebsiteURL"
-            ]
-        },
-        "Description": "URL for website hosted on S3"
     },
-    "S3BucketSecureURL": {
-        "Value": {
-            "Fn::Join": [
-                "",
-                [
-                    "https://",
-                    {
-                        "Fn::GetAtt": [
-                            "S3Bucket",
-                            "DomainName"
-                        ]
-                    }
-                ]
-            ]
+    "TriggerFirstRun": {
+      "Type": "Custom::LoadLambda",
+      "DependsOn" : "AviatrixFirstRunLambda",
+      "Properties": {
+        "ServiceToken": { "Fn::GetAtt" : ["AviatrixFirstRunLambda", "Arn"] },
+        "Region": { "Ref": "AWS::Region" }
+      }
+    },
+    "AviatrixPollerLambda": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Handler": "aviatrix_poller.handler",
+        "Role": { "Fn::GetAtt" : ["AviatrixRoleAPI", "Arn"] },
+        "Code": {
+          "S3Bucket": "quickstart-aviatrix",
+          "S3Key": "aviatrix_poller.py.zip"
         },
-        "Description": "Name of S3 bucket to hold website content"
+        "KmsKeyArn": { "Fn::GetAtt" : ["AviatrixKey", "Arn"] },
+        "Environment":
+        {
+          "Variables":
+          {
+            "controller_ip": { "Ref": "controllerip" },
+            "username": { "Ref": "username" },
+            "private_ip": { "Ref": "privateip" },
+            "admin_email": { "Ref": "adminemail" },
+            "password": { "Ref": "password" },
+            "Account" : { "Ref": "Account" },
+            "AviatrixRoleApp" : { "Ref": "AviatrixRoleApp" },
+            "AviatrixRoleEC2" : { "Ref": "AviatrixRoleEC2" },
+            "VPC" : { "Ref": "VPC" },
+            "Subnet" : { "Ref": "Subnet" },
+            "Region": { "Ref" : "AWS::Region" },
+            "GatewaySizeParam" : { "Ref": "GatewaySizeParam" },
+            "first_run": "true",
+            "setup_run": "true"
           }
-  }
+        },
+        "Runtime": "python2.7",
+        "Timeout": "300"
+      }
+    },
+    "AviatrixPollerEvent": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "Description": "Rule to trigger AviatrixPoller every 5 minutes to find VPCs that need to be attached to the Transit Hub VPC.",
+        "ScheduleExpression": "cron(0/5 * * * ? *)",
+        "State": "ENABLED",
+        "Targets": [ {
+          "Id": { "Fn::Join": ["-", [ { "Ref" : "AWS::StackName" },"VGW-Poller-5min" ]] },
+          "Arn": { "Fn::GetAtt": [ "AviatrixPollerLambda", "Arn" ] }
+        } ]
+      }
+    },
+    "AviatrixPermissionForPollerEvent": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": { "Ref": "AviatrixPollerLambda" },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "events.amazonaws.com",
+        "SourceArn": { "Fn::GetAtt": ["AviatrixPollerEvent", "Arn"] }
+      }
+    },
+  },
  }
