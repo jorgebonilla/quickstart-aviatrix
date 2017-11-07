@@ -108,13 +108,20 @@ def handler(event,context):
     AviatrixRoleApp = os.environ.get("AviatrixRoleApp")
     AviatrixRoleEC2 = os.environ.get("AviatrixRoleEC2")
     vpc_hub = os.environ.get("VPC")
-    subnet_hub = os.environ.get("Subnet")
     region_hub = os.environ.get("Region")
     gwsize_hub = os.environ.get("GatewaySizeParam")
     first_run = os.environ.get("first_run")
     setup_run = os.environ.get("setup_run")
 
+    #Determine the Subnet given the VPCID
+    ec2=boto3.client('ec2',region_name=region_hub)
+    vpcs=ec2.describe_vpcs(Filters=[
+        { 'Name': 'vpc-id', 'Values': [ vpc_hub ] }
+    ])
+    for vpc_peering in vpcs['Vpcs']:
+        subnet_hub = vpc_peering['CidrBlock']
 
+    #Start the Controller Initialization process
     controller = Aviatrix(controller_ip)
     controller.login(username,private_ip)
     controller.admin_email(admin_email)

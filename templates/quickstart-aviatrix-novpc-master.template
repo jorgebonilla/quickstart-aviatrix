@@ -8,14 +8,13 @@
       "ParameterGroups" :
       [
         { "Label" : { "default": "Amazon EC2 Configuration" }, "Parameters" : [ "KeyNameParam", "AllowedSubnetsParam" ] },
-        { "Label" : { "default" : "Existing VPC Configuration" }, "Parameters" : [ "VPCParam", "VPCCIDRParam", "SubnetParam"] },
+        { "Label" : { "default" : "Existing VPC Configuration" }, "Parameters" : [ "VPCParam", "SubnetParam"] },
         { "Label" : { "default" : "Controller Information" }, "Parameters" : [ "adminemailParam", "passwordParam", "ControllerSizeParam" ] },
         { "Label" : { "default" : "Gateway Information" }, "Parameters" : [ "GatewaySizeParam" ] }
       ],
       "ParameterLabels" :
       {
          "VPCParam" : { "default" : "Which VPC should the Aviatrix Controller be deployed to?" },
-         "VPCCIDRParam" : { "default" : "Please insert your VPC CIDR (ie. 10.0.0.0/24)" },
          "SubnetParam" : { "default" : "Which subnet within that VPC?" },
          "KeyNameParam" : { "default" : "Which keypair will be used?" },
          "AllowedSubnetsParam" : { "default" : "What is your management subnet?"},
@@ -31,10 +30,6 @@
     "VPCParam": {
       "Type": "AWS::EC2::VPC::Id",
       "Description": "Select Your VPC",
-    },
-    "VPCCIDRParam": {
-      "Type": "String",
-      "Description": "VPC CIDR (ie. 10.0.0.0/24)",
     },
     "SubnetParam": {
       "Type": "AWS::EC2::Subnet::Id",
@@ -158,9 +153,6 @@
               },
               "VPC" : {
                 "Ref": "VPCParam",
-              },
-              "Subnet" : {
-                "Ref": "VPCCIDRParam",
               },
             }
           }
