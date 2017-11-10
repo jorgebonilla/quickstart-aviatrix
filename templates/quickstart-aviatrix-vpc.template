@@ -23,15 +23,15 @@
       "Type" : "String",
       "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$",
       "ConstraintDescription": "CIDR block parameter must be in the form x.x.x.x/16-28",
-      "Description" : "VPC subnet address (Default: 10.0.0.0/16)",
-      "Default": "10.0.0.0/16"
+      "Description" : "VPC subnet address (Default: 10.1.0.0/16)",
+      "Default": "10.1.0.0/16"
     },
     "NewSubnetParam" : {
       "Type" : "String",
       "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$",
       "ConstraintDescription": "CIDR block parameter must be in the form x.x.x.x/16-28",
-      "Description" : "Subnet for the controller (Default: 10.0.1.0/24)",
-      "Default": "10.0.1.0/24"
+      "Description" : "Subnet for the controller (Default: 10.1.0.0/24)",
+      "Default": "10.1.0.0/24"
     },
   },
   "Resources": {
@@ -129,7 +129,7 @@
     },
     "Outputs": {
       "VPCID" : { "Description": "VPC ID", "Value" : { "Ref" : "VPC" } },
-      "SubnetID" : { "Description": "SubnetID", "Value" : { "Ref" : "PublicSubnet" } }
-
+      "SubnetID" : { "Description": "SubnetID", "Value" : { "Ref" : "PublicSubnet" } },
+      "SubnetCIDR" : { "Description": "SubnetCIDR", "Value": { "Ref": "NewSubnetParam" } }
     }
-  }
+}

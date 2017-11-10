@@ -2,18 +2,19 @@ from urllib2 import Request, urlopen, URLError
 from time import sleep
 import urllib, ssl, json, logging
 
-#Required for SSL Certificate no-verify
-ctx = ssl.create_default_context()
-ctx.check_hostname = False
-ctx.verify_mode = ssl.CERT_NONE
-
-
 class Aviatrix:
     logging.basicConfig(filename="./aviatrix.log",level="INFO")
+
 
     def __init__(self,controller_ip):
         self.controller_ip = controller_ip
         self.CID = ""
+
+        #Required for SSL Certificate no-verify
+        self.ctx = ssl.create_default_context()
+        self.ctx.check_hostname = False
+        self.ctx.verify_mode = ssl.CERT_NONE
+
 
     def avx_api_call(self,method,action,parameters):
         url = "https://%s/v1/api?action=%s" % (self.controller_ip,action)
@@ -25,16 +26,22 @@ class Aviatrix:
         try:
             if method == "POST":
                 data = urllib.urlencode(parameters)
-                response = urlopen(self.url, data=data, context=ctx)
+                response = urlopen(self.url, data=data, context=self.ctx)
             else:
-                response = urlopen(self.url, context=ctx)
+                response = urlopen(self.url, context=self.ctx)
             json_response = response.read()
             logging.info("HTTP Response: %s" % json_response)
             self.result = json.loads(json_response)
             if self.result['return'] == False:
-                quit()
+                self.results = self.result['reason']
+            else:
+                self.results = self.result['results']
         except URLError, e:
             print 'Failed request. Error:', e
+            return {
+                'Status' : 'FAILURE',
+                'Error' : e
+            }
 
     def login(self,username,password):
         self.avx_api_call("GET","login",{ "username": username,
@@ -55,7 +62,8 @@ class Aviatrix:
 
     def initial_setup(self,subaction):
         self.avx_api_call("POST","initial_setup", { "subaction": subaction, "CID": self.CID })
-        sleep(self.result['results'])
+        if self.result['return'] == True:
+            sleep(self.result['results'])
 
     def setup_account_profile(self,account,password,email,cloud_type,aws_account_number,aws_role_arn,aws_role_ec2):
         self.avx_api_call("POST","setup_account_profile", { "CID": self.CID,

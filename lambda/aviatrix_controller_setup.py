@@ -37,6 +37,10 @@ class Aviatrix:
                 quit()
         except URLError, e:
             print 'Failed request. Error:', e
+            return {
+                'Status' : 'FAILURE',
+                'Error' : e
+            }
 
     def login(self,username,password):
         self.avx_api_call("GET","login",{ "username": username,
@@ -151,3 +155,6 @@ def handler(event,context):
                               gwsize_hub,
                               subnet_hub)
     logger.info('Done with Hub Deployment')
+    return {
+        'Status' : 'SUCCESS'
+    }
