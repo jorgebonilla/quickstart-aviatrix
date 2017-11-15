@@ -101,3 +101,6 @@ class Aviatrix:
         self.avx_api_call("GET","unpeer_vpc_pair", { "CID": self.CID,
                                                    "vpc_name1": vpc_name1,
                                                    "vpc_name2": vpc_name2 })
+
+    def list_peers_vpc_pairs(self):
+        self.avx_api_call("GET", "list_peer_vpc_pairs", { "CID": self.CID })

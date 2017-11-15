@@ -25,7 +25,7 @@ def controller(event,context):
     account = os.environ.get("Account")
     aviatrixroleapp = os.environ.get("AviatrixRoleApp")
     aviatrixroleec2 = os.environ.get("AviatrixRoleEC2")
-    vpc_hub = os.environ.get("VPC")
+    vpcid_hub = os.environ.get("VPC")
     subnet_hub = os.environ.get("SubnetParam")
     region_hub = os.environ.get("Region")
     gwsize_hub = os.environ.get("GatewaySizeParam")
@@ -48,11 +48,9 @@ def controller(event,context):
             'Error' : controller.results
         }
     # #Account Setup
-    # #this step will not be needed with the Marketplace AMI
     try:
         controller = Aviatrix(controller_ip)
         controller.login(username,password)
-        controller.setup_customer_id("jorge-trial-1495122121.16")
 
         controller.setup_account_profile("AWSAccount",
                                          password,
@@ -71,11 +69,11 @@ def controller(event,context):
         }
     #Gather necessary info to deploy Hub GW
     message['action'] = 'deployhub'
-    message['vpc_hub'] = vpc_hub
+    message['vpcid_hub'] = vpcid_hub
     message['region_hub'] = region_hub
     message['gwsize_hub'] = gwsize_hub
     message['subnet_hub'] = subnet_hub
-    logger.info('Creating Hub VPC %s. Sending SQS message', message['vpc_hub'])
+    logger.info('Creating Hub VPC %s. Sending SQS message', message['vpcid_hub'])
 
     #Add New Hub Gateway to SQS
     sqs = boto3.resource('sqs')

@@ -10,7 +10,7 @@ logger.setLevel(logging.INFO)
 def handler(event, context):
     #Read environment Variables
     gatewayqueue = os.environ.get("GatewayQueue")
-    vpc_hub = os.environ.get("HubVPC")
+    vpcid_hub = os.environ.get("HubVPC")
     gatewaytopic = os.environ.get("GatewayTopic")
     ec2=boto3.client('ec2',region_name='us-east-1')
     regions=ec2.describe_regions()
@@ -28,17 +28,27 @@ def handler(event, context):
         for vpc_peering in vpcs['Vpcs']:
             message = {}
             message['action'] = 'deploygateway'
-            message['subnet_spoke'] = vpc_peering['CidrBlock']
             message['vpcid_spoke'] = vpc_peering['VpcId']
             message['region_spoke'] = region_id
             message['gwsize_spoke'] = 't2.micro'
-            message['vpc_hub'] = vpc_hub
+            message['vpcid_hub'] = vpcid_hub
+            #Finding the Public Subnet
+            subnets=ec2.describe_route_tables(Filters=[
+                { 'Name': 'vpc-id', 'Values':[ message['vpcid_spoke'] ]},
+                { 'Name': 'route.gateway-id', 'Values': [ 'igw-*' ] }
+            ])
+            subnetid=subnets['RouteTables'][0]['Associations'][1]['SubnetId']
+            subnet=ec2.describe_subnets(Filters=[
+                { 'Name': 'subnet-id', 'Values': [ subnetid ]}
+            ])
+            message['subnet_spoke']=subnet['Subnets'][0]['CidrBlock']
+
             logger.info('Found VPC %s waiting to be peered. Sending SQS message to Queue %s' % (message['vpcid_spoke'],gatewayqueue))
-            #Add New Gateway to SQS
-            sqs = boto3.resource('sqs')
+            #Add New Gateway to SNS
+            #sqs = boto3.resource('sqs')
             sns = boto3.client('sns')
-            queue = sqs.get_queue_by_name(QueueName=gatewayqueue)
-            response = queue.send_message(MessageBody=json.dumps(message))
+            #queue = sqs.get_queue_by_name(QueueName=gatewayqueue)
+            #response = queue.send_message(MessageBody=json.dumps(message))
             sns.publish(
                 TopicArn=gatewaytopic,
                 Subject='New Spoke Gateway',
@@ -55,13 +65,13 @@ def handler(event, context):
             message['vpcid_spoke'] = vpc_peering['VpcId']
             message['region_spoke'] = region_id
             message['gwsize_spoke'] = 't2.micro'
-            message['vpc_hub'] = vpc_hub
+            message['vpcid_hub'] = vpcid_hub
             logger.info('Found VPC %s waiting to be peered. Sending SQS message to Queue %s' % (message['vpcid_spoke'],gatewayqueue))
             #Add New Gateway to SQS
-            sqs = boto3.resource('sqs')
+            #sqs = boto3.resource('sqs')
             sns = boto3.client('sns')
-            queue = sqs.get_queue_by_name(QueueName=gatewayqueue)
-            response = queue.send_message(MessageBody=json.dumps(message))
+            #queue = sqs.get_queue_by_name(QueueName=gatewayqueue)
+            #response = queue.send_message(MessageBody=json.dumps(message))
             sns.publish(
                 TopicArn=gatewaytopic,
                 Subject='Delete Spoke Gateway',

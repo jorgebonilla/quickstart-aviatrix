@@ -79,7 +79,7 @@
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
           "TemplateURL": {
-              "Fn::Sub": "https://s3-us-west-1.amazonaws.com/quickstart-aviatrix/quickstart-aviatrix-vpc.template"
+              "Fn::Sub": "https://s3.amazonaws.com/quickstart-aviatrix-us-east-1/templates/quickstart-aviatrix-vpc.template"
           },
           "Parameters": {
             "NewVPCCIDRParam" : {
@@ -95,7 +95,7 @@
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
           "TemplateURL": {
-              "Fn::Sub": "https://s3-us-west-1.amazonaws.com/quickstart-aviatrix/quickstart-aviatrix-iamroles.template"
+              "Fn::Sub": "https://s3.amazonaws.com/quickstart-aviatrix-us-east-1/templates/quickstart-aviatrix-iamroles.template"
           },
           "Parameters": {
             "ParentAccountID": ""
@@ -107,7 +107,7 @@
         "Type": "AWS::CloudFormation::Stack",
         "Properties": {
           "TemplateURL": {
-            "Fn::Sub": "https://s3-us-west-1.amazonaws.com/quickstart-aviatrix/quickstart-aviatrix-controller.template"
+            "Fn::Sub": "https://s3.amazonaws.com/quickstart-aviatrix-us-east-1/templates/quickstart-aviatrix-controller.template"
           },
           "Parameters": {
               "VPCParam" : {
@@ -139,7 +139,7 @@
         "Type": "AWS::CloudFormation::Stack",
         "Properties": {
           "TemplateURL": {
-            "Fn::Sub": "https://s3-us-west-1.amazonaws.com/quickstart-aviatrix/quickstart-aviatrix-lamdba.template"
+            "Fn::Sub": "https://s3.amazonaws.com/quickstart-aviatrix-us-east-1/templates/quickstart-aviatrix-lamdba.template"
           },
           "Parameters": {
               "controllerip" : {

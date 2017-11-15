@@ -82,8 +82,10 @@
   {
     "RegionMap" :
     {
-      "us-east-1" : { "Name" : "ami-7f1dbb05" },
-      "us-west-1" : { "Name" : "ami-9c330ffc" }
+      "us-east-1" : { "Name" : "ami-cc27a0b6" },
+      "us-east-2" : { "Name" : "ami-33476956" },
+      "us-west-1" : { "Name" : "ami-ee0a338e" },
+      "us-west-2" : { "Name" : "ami-d97aaba1"} 
     }
   },
   "Resources" :
