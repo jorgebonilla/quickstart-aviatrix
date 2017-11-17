@@ -7,6 +7,28 @@ lambda_client = boto3.client('lambda')
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+def find_subnets(region_id,vpc_id):
+    ec2=boto3.client('ec2',region_name=region_id)
+    subnets_with_igw=ec2.describe_route_tables(Filters=[
+        { 'Name': 'vpc-id', 'Values':[ vpc_id ]},
+        { 'Name': 'route.gateway-id', 'Values': [ 'igw-*' ] }
+    ])
+    subnetids=[]
+    for association in subnets_with_igw['RouteTables'][0]['Associations']:
+      if association['Main'] == False:
+          subnet_temp = {}
+          subnet_temp['SubnetId'] = association['SubnetId']
+          subnetids.append(subnet_temp)
+    for subnet in subnetids:
+      subnet_info=ec2.describe_subnets(Filters=[
+      { 'Name': 'subnet-id', 'Values': [ subnet['SubnetId'] ] }
+      ])
+      subnet['CidrBlock'] = subnet_info['Subnets'][0]['CidrBlock']
+      for tag in subnet_info['Subnets'][0]['Tags']:
+          if tag['Key'] == 'Name':
+              subnet['Name'] = tag['Value']
+    return subnetids
+
 def handler(event, context):
     #Read environment Variables
     gatewayqueue = os.environ.get("GatewayQueue")
@@ -33,22 +55,13 @@ def handler(event, context):
             message['gwsize_spoke'] = 't2.micro'
             message['vpcid_hub'] = vpcid_hub
             #Finding the Public Subnet
-            subnets=ec2.describe_route_tables(Filters=[
-                { 'Name': 'vpc-id', 'Values':[ message['vpcid_spoke'] ]},
-                { 'Name': 'route.gateway-id', 'Values': [ 'igw-*' ] }
-            ])
-            subnetid=subnets['RouteTables'][0]['Associations'][1]['SubnetId']
-            subnet=ec2.describe_subnets(Filters=[
-                { 'Name': 'subnet-id', 'Values': [ subnetid ]}
-            ])
-            message['subnet_spoke']=subnet['Subnets'][0]['CidrBlock']
-
+            subnets=find_subnets(message['region_spoke'],message['vpcid_spoke'])
+            message['subnet_spoke'] = subnets[0]['CidrBlock']
+            message['subnet_spoke_ha'] = subnets[1]['CidrBlock']
+            message['subnet_spoke_name'] = subnets[1]['Name']
             logger.info('Found VPC %s waiting to be peered. Sending SQS message to Queue %s' % (message['vpcid_spoke'],gatewayqueue))
             #Add New Gateway to SNS
-            #sqs = boto3.resource('sqs')
             sns = boto3.client('sns')
-            #queue = sqs.get_queue_by_name(QueueName=gatewayqueue)
-            #response = queue.send_message(MessageBody=json.dumps(message))
             sns.publish(
                 TopicArn=gatewaytopic,
                 Subject='New Spoke Gateway',

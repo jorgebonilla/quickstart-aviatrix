@@ -27,6 +27,7 @@ def controller(event,context):
     aviatrixroleec2 = os.environ.get("AviatrixRoleEC2")
     vpcid_hub = os.environ.get("VPC")
     subnet_hub = os.environ.get("SubnetParam")
+    subnet_hubHA = os.environ.get("SubnetParamHA")
     region_hub = os.environ.get("Region")
     gwsize_hub = os.environ.get("GatewaySizeParam")
     gateway_queue = os.environ.get("GatewayQueue")
@@ -60,7 +61,6 @@ def controller(event,context):
                                          aviatrixroleapp,
                                          aviatrixroleec2)
         logger.info('Done with Account creation')
-        message = {}
     except URLError, e:
         logger.info('Failed request. Error: %s', controller.results)
         return {
@@ -68,18 +68,20 @@ def controller(event,context):
             'Error' : controller.results
         }
     #Gather necessary info to deploy Hub GW
+    message = {}
     message['action'] = 'deployhub'
     message['vpcid_hub'] = vpcid_hub
     message['region_hub'] = region_hub
     message['gwsize_hub'] = gwsize_hub
     message['subnet_hub'] = subnet_hub
+    message['subnet_hubHA'] = subnet_hubHA
     logger.info('Creating Hub VPC %s. Sending SQS message', message['vpcid_hub'])
 
     #Add New Hub Gateway to SQS
-    sqs = boto3.resource('sqs')
+    #sqs = boto3.resource('sqs')
     sns = boto3.client('sns')
-    queue = sqs.get_queue_by_name(QueueName=gateway_queue)
-    response = queue.send_message(MessageBody=json.dumps(message))
+    #queue = sqs.get_queue_by_name(QueueName=gateway_queue)
+    #response = queue.send_message(MessageBody=json.dumps(message))
     sns.publish(
         TopicArn=gatewaytopic,
         Subject='Create Hub Gateway',

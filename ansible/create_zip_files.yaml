@@ -1,0 +1,113 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+  - name: Create aviatrix_controller.py.zip package
+    archive:
+      path:
+          - ../scripts/aviatrix_controller.py
+          - ../scripts/aviatrix.py
+          - ../scripts/cfn_resource.py
+      dest: ./build/aviatrix_controller.py.zip
+      format: zip
+  - name: Create aviatrix_gateway.py.zip package
+    archive:
+      path:
+          - ../scripts/aviatrix_gateway.py
+          - ../scripts/aviatrix.py
+      dest: ./build/aviatrix_gateway.py.zip
+      format: zip
+  - name: Create aviatrix_poller_sqs.py.zip package
+    archive:
+      path:
+          - ../scripts/aviatrix_poller_sqs.py
+      dest: ./build/aviatrix_poller_sqs.py.zip
+      format: zip
+
+  - name: us-east-1 upload aviatrix_controller.py.zip
+    s3:
+      region: us-east-1
+      bucket: quickstart-aviatrix-us-east-1
+      object: /scripts/aviatrix_controller.py.zip
+      src: ./build/aviatrix_controller.py.zip
+      mode: put
+  - name: us-east-1 upload aviatrix_gateway.py.zip
+    s3:
+      region: us-east-1
+      bucket: quickstart-aviatrix-us-east-1
+      object: /scripts/aviatrix_gateway.py.zip
+      src: ./build/aviatrix_gateway.py.zip
+      mode: put
+  - name: us-east-1 upload aviatrix_poller_sqs.py.zip
+    s3:
+      region: us-east-1
+      bucket: quickstart-aviatrix-us-east-1
+      object: /scripts/aviatrix_poller_sqs.py.zip
+      src: ./build/aviatrix_poller_sqs.py.zip
+      mode: put
+
+  - name: us-east-2 upload aviatrix_controller.py.zip
+    s3:
+      region: us-east-2
+      bucket: quickstart-aviatrix-us-east-2
+      object: /scripts/aviatrix_controller.py.zip
+      src: ./build/aviatrix_controller.py.zip
+      mode: put
+  - name: us-east-2 upload aviatrix_gateway.py.zip
+    s3:
+      region: us-east-2
+      bucket: quickstart-aviatrix-us-east-2
+      object: /scripts/aviatrix_gateway.py.zip
+      src: ./build/aviatrix_gateway.py.zip
+      mode: put
+  - name: us-east-2 upload aviatrix_poller_sqs.py.zip
+    s3:
+      region: us-east-2
+      bucket: quickstart-aviatrix-us-east-2
+      object: /scripts/aviatrix_poller_sqs.py.zip
+      src: ./build/aviatrix_poller_sqs.py.zip
+      mode: put
+
+  - name: us-west-1 upload aviatrix_controller.py.zip
+    s3:
+      region: us-west-1
+      bucket: quickstart-aviatrix-us-west-1
+      object: /scripts/aviatrix_controller.py.zip
+      src: ./build/aviatrix_controller.py.zip
+      mode: put
+  - name: us-west-1 upload aviatrix_gateway.py.zip
+    s3:
+      region: us-west-1
+      bucket: quickstart-aviatrix-us-west-1
+      object: /scripts/aviatrix_gateway.py.zip
+      src: ./build/aviatrix_gateway.py.zip
+      mode: put
+  - name: us-west-1 upload aviatrix_poller_sqs.py.zip
+    s3:
+      region: us-west-1
+      bucket: quickstart-aviatrix-us-west-1
+      object: /scripts/aviatrix_poller_sqs.py.zip
+      src: ./build/aviatrix_poller_sqs.py.zip
+      mode: put
+
+  - name: us-west-2 upload aviatrix_controller.py.zip
+    s3:
+      region: us-west-2
+      bucket: quickstart-aviatrix-us-west-2
+      object: /scripts/aviatrix_controller.py.zip
+      src: ./build/aviatrix_controller.py.zip
+      mode: put
+  - name: us-west-2 upload aviatrix_gateway.py.zip
+    s3:
+      region: us-west-2
+      bucket: quickstart-aviatrix-us-west-2
+      object: /scripts/aviatrix_gateway.py.zip
+      src: ./build/aviatrix_gateway.py.zip
+      mode: put
+  - name: us-west-2 upload aviatrix_poller_sqs.py.zip
+    s3:
+      region: us-west-2
+      bucket: quickstart-aviatrix-us-west-2
+      object: /scripts/aviatrix_poller_sqs.py.zip
+      src: ./build/aviatrix_poller_sqs.py.zip
+      mode: put

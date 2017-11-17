@@ -8,12 +8,13 @@
       "ParameterGroups" :
       [
         { "Label" : { "default" : "VPC Configuration"},
-          "Parameters" : [ "NewVPCCIDRParam", "NewSubnetParam"] }
+          "Parameters" : [ "NewVPCCIDRParam", "NewSubnetParam", "NewSubnetParamHA" ] }
       ],
       "ParameterLabels" :
       {
-         "NewVPCCIDRParam" : { "default" : "VPC subnet"},
-         "NewSubnetParam" : { "default" : "Subnet"}
+         "NewVPCCIDRParam" : { "default" : "VPC subnet?"},
+         "NewSubnetParam" : { "default" : "Subnet?"},
+         "NewSubnetParamHA" : { "default" : "Subnet for HA?"}
       }
     }
   },
@@ -33,6 +34,13 @@
       "Description" : "Subnet for the controller (Default: 10.1.0.0/24)",
       "Default": "10.1.0.0/24"
     },
+    "NewSubnetParamHA" : {
+      "Type" : "String",
+      "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$",
+      "ConstraintDescription": "CIDR block parameter must be in the form x.x.x.x/16-28",
+      "Description" : "(Required) Subnet for the controller (Default: 10.1.1.0/24)",
+      "Default": "10.1.1.0/24"
+    }
   },
   "Resources": {
     "VPC": {
@@ -77,6 +85,7 @@
       "PublicSubnet": {
           "Type": "AWS::EC2::Subnet",
           "Properties": {
+              "AvailabilityZone": { "Fn::Join" : [ "", [ { "Ref" : "AWS::Region" }, "a" ] ] },
               "VpcId": {
                   "Ref": "VPC"
               },
@@ -86,6 +95,24 @@
               "Tags":
                 [
                   { "Key": "Name", "Value": "Aviatrix VPC-Public Subnet" },
+                  { "Key": "Project", "Value": "Aviatrix" },
+                  { "Key": "CreatedUsing", "Value": "Aviatrix Quickstart" }
+                ]
+          }
+      },
+      "PublicSubnetHA": {
+          "Type": "AWS::EC2::Subnet",
+          "Properties": {
+              "AvailabilityZone": { "Fn::Join" : [ "", [ { "Ref" : "AWS::Region" }, "b" ] ] },
+              "VpcId": {
+                  "Ref": "VPC"
+              },
+              "CidrBlock": {
+                  "Ref": "NewSubnetParamHA"
+              },
+              "Tags":
+                [
+                  { "Key": "Name", "Value": "Aviatrix VPC-Public Subnet HA" },
                   { "Key": "Project", "Value": "Aviatrix" },
                   { "Key": "CreatedUsing", "Value": "Aviatrix Quickstart" }
                 ]
@@ -125,11 +152,25 @@
                     "Ref": "RouteTable"
                 }
             }
+        },
+        "PrivateSubnet1ARouteTableAssociationHA": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "PublicSubnetHA"
+                },
+                "RouteTableId": {
+                    "Ref": "RouteTable"
+                }
+            }
         }
     },
     "Outputs": {
       "VPCID" : { "Description": "VPC ID", "Value" : { "Ref" : "VPC" } },
       "SubnetID" : { "Description": "SubnetID", "Value" : { "Ref" : "PublicSubnet" } },
-      "SubnetCIDR" : { "Description": "SubnetCIDR", "Value": { "Ref": "NewSubnetParam" } }
+      "SubnetIDHA" : { "Description": "SubnetIDHA", "Value" : { "Ref" : "PublicSubnetHA" } },
+      "SubnetCIDR" : { "Description": "SubnetCIDR", "Value": { "Ref": "NewSubnetParam" } },
+      "SubnetCIDRHA" : { "Description": "SubnetCIDRHA", "Value": { "Ref": "NewSubnetParamHA" } },
+
     }
 }
