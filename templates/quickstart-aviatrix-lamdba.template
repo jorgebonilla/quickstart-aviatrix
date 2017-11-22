@@ -216,8 +216,7 @@
             "Region": { "Ref" : "AWS::Region" },
             "GatewaySizeParam" : { "Ref": "GatewaySizeParam" },
             "GatewayQueue" : { "Fn::GetAtt" : ["AviatrixGWQueue", "QueueName"]},
-            "GatewayQueueURL" : { "Ref" : "AviatrixGWQueue" },
-            "GatewayTopic" : { "Ref": "AviatrixGWTopic" }
+            "GatewayQueueURL" : { "Ref" : "AviatrixGWQueue" }
           }
         },
         "Runtime": "python2.7",
@@ -276,7 +275,7 @@
     "AviatrixPollerEvent": {
       "Type": "AWS::Events::Rule",
       "Properties": {
-        "Description": "Rule to trigger AviatrixPoller every 5 minutes to find VPCs that need to be attached to the Transit Hub VPC.",
+        "Description": "Rule to trigger AviatrixPoller every 1 minutes to find VPCs that need to be attached to the Transit Hub VPC.",
         "ScheduleExpression": "cron(* * * * ? *)",
         "State": "ENABLED",
         "Targets": [ {

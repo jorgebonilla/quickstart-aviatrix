@@ -84,7 +84,7 @@ def handler(event, context):
     username = os.environ.get("Username")
     password = os.environ.get("Password")
     queue_url = os.environ.get("GatewayQueueURL")
-    gatewaytopic = os.environ.get("GatewayTopic")
+    gatewaytopic = event['Records'][0]['EventSubscriptionArn'][:55]
     # Receive message from SQS queue
     #body=read_queue(queue_url)
     logger.info('Received Message: %s', event)

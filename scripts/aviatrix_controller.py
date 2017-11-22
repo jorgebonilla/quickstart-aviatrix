@@ -52,7 +52,6 @@ def controller(event,context):
     try:
         controller = Aviatrix(controller_ip)
         controller.login(username,password)
-
         controller.setup_account_profile("AWSAccount",
                                          password,
                                          admin_email,
