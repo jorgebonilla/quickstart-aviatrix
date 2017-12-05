@@ -4,18 +4,13 @@ import urllib, ssl, json, logging
 
 class Aviatrix:
     logging.basicConfig(filename="./aviatrix.log",level="INFO")
-
-
     def __init__(self,controller_ip):
         self.controller_ip = controller_ip
         self.CID = ""
-
         #Required for SSL Certificate no-verify
         self.ctx = ssl.create_default_context()
         self.ctx.check_hostname = False
         self.ctx.verify_mode = ssl.CERT_NONE
-
-
     def avx_api_call(self,method,action,parameters):
         url = "https://%s/v1/api?action=%s" % (self.controller_ip,action)
         for key,value in parameters.iteritems():
@@ -37,17 +32,16 @@ class Aviatrix:
             else:
                 self.results = self.result['results']
         except URLError, e:
-            print 'Failed request. Error:', e
-            return {
-                'Status' : 'FAILURE',
-                'Error' : e
-            }
+            logging.info('Failed request. URLError: %s', str(e.reason))
 
     def login(self,username,password):
         self.avx_api_call("GET","login",{ "username": username,
                                           "password": password })
-        if self.result['return'] == True:
-            self.CID = self.result['CID']
+        try:
+            if self.result['return'] == True:
+                self.CID = self.result['CID']
+        except AttributeError,e:
+            logging.info('Login Request Failed. AttributeError: %s', str(e))
 
     def admin_email(self,email):
         self.avx_api_call("GET","add_admin_email_addr", { "CID": self.CID,
@@ -121,3 +115,14 @@ class Aviatrix:
 
     def list_peers_vpc_pairs(self):
         self.avx_api_call("GET", "list_peer_vpc_pairs", { "CID": self.CID })
+
+    def list_vpcs_summary(self,account_name):
+        self.avx_api_call("GET", "list_vpcs_summary", { "CID": self.CID,
+                                                        "account_name": account_name })
+
+    def add_vpn_user(self,vpc_id,username,user_email,profile_name):
+        self.avx_api_call("GET", "add_vpn_user", {  "CID": self.CID,
+                                                    "vpc_id": vpc_id,
+                                                    "username": username,
+                                                    "user_email": user_email,
+                                                    "profile_name": profile_name })
