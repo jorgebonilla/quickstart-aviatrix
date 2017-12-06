@@ -1,0 +1,13 @@
+# Test.
+language: python
+python:
+  - '2.7'
+script:
+  - python scripts/json_validator.py
+
+# Deploy.
+before_deploy:
+  - pip install -r requirements.txt
+deploy:
+  provider: script
+  script: scripts/deploy.sh
