@@ -170,7 +170,7 @@
       "SubnetID" : { "Description": "SubnetID", "Value" : { "Ref" : "PublicSubnet" } },
       "SubnetIDHA" : { "Description": "SubnetIDHA", "Value" : { "Ref" : "PublicSubnetHA" } },
       "SubnetCIDR" : { "Description": "SubnetCIDR", "Value": { "Ref": "NewSubnetParam" } },
-      "SubnetCIDRHA" : { "Description": "SubnetCIDRHA", "Value": { "Ref": "NewSubnetParamHA" } },
+      "SubnetCIDRHA" : { "Description": "SubnetCIDRHA", "Value": { "Ref": "NewSubnetParamHA" } }
 
     }
 }

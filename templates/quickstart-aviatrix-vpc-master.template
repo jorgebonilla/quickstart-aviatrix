@@ -91,7 +91,7 @@
           },
           "Parameters": {
             "NewVPCCIDRParam" : {
-              "Ref": "NewVPCCIDRParam",
+              "Ref": "NewVPCCIDRParam"
             },
             "NewSubnetParam": {
               "Ref": "NewSubnetParam"
@@ -134,7 +134,7 @@
                 ]
               },
               "KeyNameParam" : {
-                "Ref": "KeyNameParam",
+                "Ref": "KeyNameParam"
               },
               "AviatrixInstanceProfile" : {
                 "Fn::GetAtt": [
@@ -167,10 +167,10 @@
                 ]
               },
               "adminemail" : {
-                "Ref": "adminemailParam",
+                "Ref": "adminemailParam"
               },
               "password" : {
-                "Ref": "passwordParam",
+                "Ref": "passwordParam"
               },
               "AviatrixRoleApp" : {
                 "Fn::GetAtt": [

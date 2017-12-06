@@ -29,11 +29,11 @@
   {
     "VPCParam": {
       "Type": "AWS::EC2::VPC::Id",
-      "Description": "(Required) Select Your VPC",
+      "Description": "(Required) Select Your VPC"
     },
     "SubnetParam": {
       "Type": "AWS::EC2::Subnet::Id",
-      "Description": "(Required) Select Subnet",
+      "Description": "(Required) Select Subnet"
     },
     "KeyNameParam": {
       "Type": "AWS::EC2::KeyPair::KeyName",
@@ -89,13 +89,13 @@
           },
           "Parameters": {
               "VPCParam" : {
-                "Ref": "VPCParam",
+                "Ref": "VPCParam"
               },
               "SubnetParam" : {
-                "Ref": "SubnetParam",
+                "Ref": "SubnetParam"
               },
               "KeyNameParam" : {
-                "Ref": "KeyNameParam",
+                "Ref": "KeyNameParam"
               },
               "AviatrixInstanceProfile" : {
                 "Fn::GetAtt": [
@@ -128,10 +128,10 @@
                 ]
               },
               "adminemail" : {
-                "Ref": "adminemailParam",
+                "Ref": "adminemailParam"
               },
               "password" : {
-                "Ref": "passwordParam",
+                "Ref": "passwordParam"
               },
               "AviatrixRoleApp" : {
                 "Fn::GetAtt": [
@@ -152,8 +152,8 @@
                 ]
               },
               "VPC" : {
-                "Ref": "VPCParam",
-              },
+                "Ref": "VPCParam"
+              }
             }
           }
         }

@@ -35,7 +35,7 @@
       "Default" : "t2.large",
       "AllowedValues" : ["t2.large", "m3.medium","m3.large","m3.xlarge","m4.large","m4.xlarge","c4.large","c4.xlarge"],
       "Description" : "Select an instance size. Default is t2.large."
-    },
+    }
   },
   "Rules": {
       "KeyPairsNotEmpty": {
@@ -85,7 +85,7 @@
       "us-east-1" : { "Name" : "ami-cc27a0b6" },
       "us-east-2" : { "Name" : "ami-33476956" },
       "us-west-1" : { "Name" : "ami-ee0a338e" },
-      "us-west-2" : { "Name" : "ami-d97aaba1"} 
+      "us-west-2" : { "Name" : "ami-d97aaba1"}
     }
   },
   "Resources" :
