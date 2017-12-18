@@ -9,6 +9,7 @@
         object: /scripts/aviatrix_controller.py.zip
         src: ./build/aviatrix_controller.py.zip
         mode: put
+        permission: public-read
     - name: us-east-1 upload aviatrix_gateway.py.zip
       s3:
         region: us-east-1
@@ -16,6 +17,7 @@
         object: /scripts/aviatrix_gateway.py.zip
         src: ./build/aviatrix_gateway.py.zip
         mode: put
+        permission: public-read
     - name: us-east-1 upload aviatrix_poller_sqs.py.zip
       s3:
         region: us-east-1
@@ -23,6 +25,7 @@
         object: /scripts/aviatrix_poller_sqs.py.zip
         src: ./build/aviatrix_poller_sqs.py.zip
         mode: put
+        permission: public-read
 
     - name: us-east-2 upload aviatrix_controller.py.zip
       s3:
@@ -31,6 +34,7 @@
         object: /scripts/aviatrix_controller.py.zip
         src: ./build/aviatrix_controller.py.zip
         mode: put
+        permission: public-read
     - name: us-east-2 upload aviatrix_gateway.py.zip
       s3:
         region: us-east-2
@@ -38,6 +42,7 @@
         object: /scripts/aviatrix_gateway.py.zip
         src: ./build/aviatrix_gateway.py.zip
         mode: put
+        permission: public-read
     - name: us-east-2 upload aviatrix_poller_sqs.py.zip
       s3:
         region: us-east-2
@@ -45,6 +50,7 @@
         object: /scripts/aviatrix_poller_sqs.py.zip
         src: ./build/aviatrix_poller_sqs.py.zip
         mode: put
+        permission: public-read
 
     - name: us-west-1 upload aviatrix_controller.py.zip
       s3:
@@ -53,6 +59,7 @@
         object: /scripts/aviatrix_controller.py.zip
         src: ./build/aviatrix_controller.py.zip
         mode: put
+        permission: public-read
     - name: us-west-1 upload aviatrix_gateway.py.zip
       s3:
         region: us-west-1
@@ -60,6 +67,7 @@
         object: /scripts/aviatrix_gateway.py.zip
         src: ./build/aviatrix_gateway.py.zip
         mode: put
+        permission: public-read
     - name: us-west-1 upload aviatrix_poller_sqs.py.zip
       s3:
         region: us-west-1
@@ -67,6 +75,7 @@
         object: /scripts/aviatrix_poller_sqs.py.zip
         src: ./build/aviatrix_poller_sqs.py.zip
         mode: put
+        permission: public-read
 
     - name: us-west-2 upload aviatrix_controller.py.zip
       s3:
@@ -75,6 +84,7 @@
         object: /scripts/aviatrix_controller.py.zip
         src: ./build/aviatrix_controller.py.zip
         mode: put
+        permission: public-read
     - name: us-west-2 upload aviatrix_gateway.py.zip
       s3:
         region: us-west-2
@@ -82,6 +92,7 @@
         object: /scripts/aviatrix_gateway.py.zip
         src: ./build/aviatrix_gateway.py.zip
         mode: put
+        permission: public-read
     - name: us-west-2 upload aviatrix_poller_sqs.py.zip
       s3:
         region: us-west-2
@@ -89,3 +100,4 @@
         object: /scripts/aviatrix_poller_sqs.py.zip
         src: ./build/aviatrix_poller_sqs.py.zip
         mode: put
+        permission: public-read

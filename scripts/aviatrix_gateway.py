@@ -64,19 +64,36 @@ def tag_spoke(region_spoke,vpcid_spoke,tag):
     ec2=boto3.client('ec2',region_name=region_spoke)
     ec2.create_tags(Resources = [ vpcid_spoke ], Tags = [ { 'Key': 'aviatrix-spoke', 'Value': tag } ])
 
-def find_other_spokes(vpc_pairs,vpc_id,region_id):
+def find_other_spokes(vpc_pairs):
+    ec2=boto3.client('ec2',region_name='us-east-1')
+    regions=ec2.describe_regions()
     if vpc_pairs:
         existing_spokes=[]
         for vpc_name in vpc_pairs['pair_list']:
             vpc_name_temp = {}
             vpc_name_temp['vpc_name'] = vpc_name['vpc_name2']
-            ec2=boto3.client('ec2',region_name=region_id)
-            vpc_info=ec2.describe_vpcs(Filters=[
-                { 'Name': 'vpc-id', 'Values':[ vpc_name['vpc_name2'][6:] ]}
-                ])
-            vpc_name_temp['subnet'] = vpc_info['Vpcs'][0]['CidrBlock']
-            existing_spokes.append(vpc_name_temp)
+            for region in regions['Regions']:
+                region_id=region['RegionName']
+                ec2=boto3.client('ec2',region_name=region_id)
+                vpc_info=ec2.describe_vpcs(Filters=[
+                    { 'Name': 'vpc-id', 'Values':[ vpc_name['vpc_name2'][6:] ]}
+                    ])
+                if vpc_info['Vpcs']:
+                    vpc_name_temp['subnet'] = vpc_info['Vpcs'][0]['CidrBlock']
+                    existing_spokes.append(vpc_name_temp)
     return existing_spokes
+
+def test_find_other_spokes():
+    test_vpc_pairs = {
+                        "pair_list": [
+                            {
+                                "vpc_name2": "spoke-vpc-7a169913",
+                                "vpc_name1": "hub-vpc-7c246404",
+                                "peering_link": ""
+                            }
+                        ]
+                    }
+    assert find_other_spokes(test_vpc_pairs) == [{'subnet': '172.31.0.0/16', 'vpc_name': 'spoke-vpc-7a169913'}]
 
 def handler(event, context):
     #Read environment Variables
@@ -203,7 +220,7 @@ def handler(event, context):
             logger.info('Peering: hub-%s --> spoke-%s' % (vpcid_hub, vpcid_spoke))
             controller.peering("hub-"+vpcid_hub, "spoke-"+vpcid_spoke)
             #Creating the transitive connections
-            existing_spokes = find_other_spokes(found_pairs,vpcid_spoke,region_spoke)
+            existing_spokes = find_other_spokes(found_pairs)
             logger.info('Creating Transitive routes, Data: %s' % existing_spokes)
             if existing_spokes:
                 for existing_spoke in existing_spokes:
