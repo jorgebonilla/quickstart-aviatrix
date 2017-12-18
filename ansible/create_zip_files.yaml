@@ -18,9 +18,9 @@
           - ../scripts/aviatrix.py
       dest: ./build/aviatrix_gateway.py.zip
       format: zip
-  - name: Create aviatrix_poller_sqs.py.zip package
+  - name: Create aviatrix_poller.py.zip package
     archive:
       path:
-          - ../scripts/aviatrix_poller_sqs.py
-      dest: ./build/aviatrix_poller_sqs.py.zip
+          - ../scripts/aviatrix_poller.py
+      dest: ./build/aviatrix_poller.py.zip
       format: zip
