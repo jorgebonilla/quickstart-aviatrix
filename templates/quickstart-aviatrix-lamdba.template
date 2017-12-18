@@ -336,7 +336,7 @@
 		"AviatrixPollerSQSLambda": {
 			"Type": "AWS::Lambda::Function",
 			"Properties": {
-				"Handler": "aviatrix_poller_sqs.handler",
+				"Handler": "aviatrix_poller.handler",
 				"Role": {
 					"Fn::GetAtt": ["AviatrixRoleAPI", "Arn"]
 				},
@@ -346,7 +346,7 @@
 							"Ref": "AWS::Region"
 						}]]
 					},
-					"S3Key": "scripts/aviatrix_poller_sqs.py.zip"
+					"S3Key": "scripts/aviatrix_poller.py.zip"
 				},
 				"KmsKeyArn": {
 					"Fn::GetAtt": ["AviatrixKey", "Arn"]

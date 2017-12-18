@@ -18,12 +18,12 @@
         src: ./build/aviatrix_gateway.py.zip
         mode: put
         permission: public-read
-    - name: us-east-1 upload aviatrix_poller_sqs.py.zip
+    - name: us-east-1 upload aviatrix_poller.py.zip
       s3:
         region: us-east-1
         bucket: quickstart-aviatrix-us-east-1
-        object: /scripts/aviatrix_poller_sqs.py.zip
-        src: ./build/aviatrix_poller_sqs.py.zip
+        object: /scripts/aviatrix_poller.py.zip
+        src: ./build/aviatrix_poller.py.zip
         mode: put
         permission: public-read
 
@@ -43,12 +43,12 @@
         src: ./build/aviatrix_gateway.py.zip
         mode: put
         permission: public-read
-    - name: us-east-2 upload aviatrix_poller_sqs.py.zip
+    - name: us-east-2 upload aviatrix_poller.py.zip
       s3:
         region: us-east-2
         bucket: quickstart-aviatrix-us-east-2
-        object: /scripts/aviatrix_poller_sqs.py.zip
-        src: ./build/aviatrix_poller_sqs.py.zip
+        object: /scripts/aviatrix_poller.py.zip
+        src: ./build/aviatrix_poller.py.zip
         mode: put
         permission: public-read
 
@@ -68,12 +68,12 @@
         src: ./build/aviatrix_gateway.py.zip
         mode: put
         permission: public-read
-    - name: us-west-1 upload aviatrix_poller_sqs.py.zip
+    - name: us-west-1 upload aviatrix_poller.py.zip
       s3:
         region: us-west-1
         bucket: quickstart-aviatrix-us-west-1
-        object: /scripts/aviatrix_poller_sqs.py.zip
-        src: ./build/aviatrix_poller_sqs.py.zip
+        object: /scripts/aviatrix_poller.py.zip
+        src: ./build/aviatrix_poller.py.zip
         mode: put
         permission: public-read
 
@@ -93,11 +93,11 @@
         src: ./build/aviatrix_gateway.py.zip
         mode: put
         permission: public-read
-    - name: us-west-2 upload aviatrix_poller_sqs.py.zip
+    - name: us-west-2 upload aviatrix_poller.py.zip
       s3:
         region: us-west-2
         bucket: quickstart-aviatrix-us-west-2
-        object: /scripts/aviatrix_poller_sqs.py.zip
-        src: ./build/aviatrix_poller_sqs.py.zip
+        object: /scripts/aviatrix_poller.py.zip
+        src: ./build/aviatrix_poller.py.zip
         mode: put
         permission: public-read
