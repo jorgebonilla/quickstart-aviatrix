@@ -1,6 +1,7 @@
 from urllib2 import Request, urlopen, URLError
 from time import sleep
 import urllib, ssl, json, logging
+import os
 
 class Aviatrix:
     logging.basicConfig(filename="./aviatrix.log",level="INFO")
@@ -106,12 +107,13 @@ class Aviatrix:
                                                     "vpc_name": vpc_name,
                                                     "specific_subnet": specific_subnet })
 
-    def extended_vpc_peer(self,subaction,source,nexthop,reachable_cidr):
-        self.avx_api_call("POST", "extended_vpc_peer", { "CID": self.CID,
-                                                        "subaction": subaction,
+    def add_extended_vpc_peer(self,source,nexthop,reachable_cidr):
+        self.avx_api_call("POST", "add_extended_vpc_peer", { "CID": self.CID,
                                                         "source": source,
                                                         "nexthop": nexthop,
                                                         "reachable_cidr": reachable_cidr })
+    def list_extended_vpc_peer(self):
+        self.avx_api_call("POST", "list_extended_vpc_peer", { "CID": self.CID })
 
     def list_peers_vpc_pairs(self):
         self.avx_api_call("GET", "list_peer_vpc_pairs", { "CID": self.CID })

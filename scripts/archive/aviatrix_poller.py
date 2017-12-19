@@ -1,4 +1,4 @@
-#copy paste this into lamdba
+#copy paste this into lambda
 import os, sys, urllib, ssl, json, logging, boto3
 from urllib2 import Request, urlopen, URLError
 from time import sleep

@@ -224,8 +224,8 @@ def handler(event, context):
             logger.info('Creating Transitive routes, Data: %s' % existing_spokes)
             if existing_spokes:
                 for existing_spoke in existing_spokes:
-                    controller.extended_vpc_peer('add','spoke-'+vpcid_spoke,'hub-'+vpcid_hub,existing_spoke['subnet'])
-                    controller.extended_vpc_peer('add',existing_spoke['vpc_name'],'hub-'+vpcid_hub,subnet_spoke)
+                    controller.add_extended_vpc_peer('spoke-' + vpcid_spoke, 'hub-' + vpcid_hub, existing_spoke['subnet'])
+                    controller.add_extended_vpc_peer(existing_spoke['vpc_name'],'hub-' + vpcid_hub, subnet_spoke)
             logger.info('Finished creating Transitive routes')
             #if len(existing_spokes) != 0:
                 #Create transitive routes for each spoke

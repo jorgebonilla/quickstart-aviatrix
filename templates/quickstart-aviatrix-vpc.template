@@ -85,7 +85,7 @@
       "PublicSubnet": {
           "Type": "AWS::EC2::Subnet",
           "Properties": {
-              "AvailabilityZone": { "Fn::Join" : [ "", [ { "Ref" : "AWS::Region" }, "a" ] ] },
+              "AvailabilityZone": { "Fn::Join" : [ "", [ { "Ref" : "AWS::Region" }, "b" ] ] },
               "VpcId": {
                   "Ref": "VPC"
               },
@@ -103,7 +103,7 @@
       "PublicSubnetHA": {
           "Type": "AWS::EC2::Subnet",
           "Properties": {
-              "AvailabilityZone": { "Fn::Join" : [ "", [ { "Ref" : "AWS::Region" }, "b" ] ] },
+              "AvailabilityZone": { "Fn::Join" : [ "", [ { "Ref" : "AWS::Region" }, "c" ] ] },
               "VpcId": {
                   "Ref": "VPC"
               },
