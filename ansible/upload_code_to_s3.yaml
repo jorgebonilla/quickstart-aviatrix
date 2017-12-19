@@ -26,6 +26,56 @@
         src: ./build/aviatrix_poller.py.zip
         mode: put
         permission: public-read
+    - name: us-east-1 upload quickstart-aviatrix-vpc.template
+      s3:
+        region: us-east-1
+        bucket: quickstart-aviatrix-us-east-1
+        object: /templates/quickstart-aviatrix-vpc.template
+        src: ../templates/quickstart-aviatrix-vpc.template
+        mode: put
+        permission: public-read
+    - name: us-east-1 upload quickstart-aviatrix-iamroles.template
+      s3:
+        region: us-east-1
+        bucket: quickstart-aviatrix-us-east-1
+        object: /templates/quickstart-aviatrix-iamroles.template
+        src: ../templates/quickstart-aviatrix-iamroles.template
+        mode: put
+        permission: public-read
+    - name: us-east-1 upload quickstart-aviatrix-controller.template
+      s3:
+        region: us-east-1
+        bucket: quickstart-aviatrix-us-east-1
+        object: /templates/quickstart-aviatrix-controller.template
+        src: ../templates/quickstart-aviatrix-controller.template
+        mode: put
+        permission: public-read
+    - name: us-east-1 upload quickstart-aviatrix-lambda.template
+      s3:
+        region: us-east-1
+        bucket: quickstart-aviatrix-us-east-1
+        object: /templates/quickstart-aviatrix-lambda.template
+        src: ../templates/quickstart-aviatrix-lambda.template
+        mode: put
+        permission: public-read
+    - name: us-east-1 upload quickstart-aviatrix-novpc-master.template
+      s3:
+        region: us-east-1
+        bucket: quickstart-aviatrix-us-east-1
+        object: /templates/quickstart-aviatrix-novpc-master.template
+        src: ../templates/quickstart-aviatrix-novpc-master.template
+        mode: put
+        permission: public-read
+    - name: us-east-1 upload quickstart-aviatrix-vpc-master.template
+      s3:
+        region: us-east-1
+        bucket: quickstart-aviatrix-us-east-1
+        object: /templates/quickstart-aviatrix-vpc-master.template
+        src: ../templates/quickstart-aviatrix-vpc-master.template
+        mode: put
+        permission: public-read
+
+
 
     - name: us-east-2 upload aviatrix_controller.py.zip
       s3:
