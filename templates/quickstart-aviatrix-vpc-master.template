@@ -8,7 +8,7 @@
       "ParameterGroups" :
       [
         { "Label" : { "default": "Amazon EC2 Configuration" }, "Parameters" : [ "KeyNameParam", "AllowedSubnetsParam" ] },
-        { "Label" : { "default" : "VPC Configuration"}, "Parameters" : [ "NewVPCCIDRParam", "NewSubnetParam", "NewSubnetParamHA" ] },
+        { "Label" : { "default" : "VPC Configuration"}, "Parameters" : [ "NewVPCCIDRParam", "NewSubnetParam", "NewAZParam", "NewSubnetParamHA", "NewAZParamHA" ] },
         { "Label" : { "default" : "Controller Information" }, "Parameters" : [ "adminemailParam", "passwordParam", "ControllerSizeParam" ] },
         { "Label" : { "default" : "Gateway Information" }, "Parameters" : [ "GatewaySizeParam" ] }
       ],
@@ -17,6 +17,8 @@
          "NewVPCCIDRParam" : { "default" : "VPC's CIDR Block?"},
          "NewSubnetParam" : { "default" : "Subnet CIDR Block?"},
          "NewSubnetParamHA" : { "default" : "Subnet CIDR Block for HA?"},
+         "NewAZParam" : { "default": "Availability zone" },
+         "NewAZParamHA" : { "default": "Availability zone for HA"},
          "KeyNameParam" : { "default" : "Which keypair will be used?" },
          "AllowedSubnetsParam" : { "default" : "What is your management subnet?"},
          "adminemailParam" : { "default" : "Administrator email address?"},
@@ -48,6 +50,12 @@
       "ConstraintDescription": "CIDR block parameter must be in the form x.x.x.x/16-28",
       "Description" : "(Required) Subnet for the HA Hub Gateway (Default: 10.1.1.0/24)",
       "Default": "10.1.1.0/24"
+    },
+    "NewAZParam":{
+      "Type": "AWS::EC2::AvailabilityZone::Name"
+    },
+    "NewAZParamHA":{
+      "Type": "AWS::EC2::AvailabilityZone::Name"
     },
     "KeyNameParam": {
       "Type": "AWS::EC2::KeyPair::KeyName",
@@ -98,6 +106,12 @@
             },
             "NewSubnetParamHA": {
               "Ref": "NewSubnetParamHA"
+            },
+            "NewAZParam": {
+              "Ref": "NewAZParam"
+            },
+            "NewAZParamHA": {
+              "Ref": "NewAZParamHA"
             }
           }
       }
