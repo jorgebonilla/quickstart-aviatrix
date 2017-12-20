@@ -333,7 +333,7 @@
 				}
 			}
 		},
-		"AviatrixPollerSQSLambda": {
+		"AviatrixPollerLambda": {
 			"Type": "AWS::Lambda::Function",
 			"Properties": {
 				"Handler": "aviatrix_poller.handler",
@@ -384,7 +384,7 @@
 						}, "VGW-Poller-5min"]]
 					},
 					"Arn": {
-						"Fn::GetAtt": ["AviatrixPollerSQSLambda", "Arn"]
+						"Fn::GetAtt": ["AviatrixPollerLambda", "Arn"]
 					}
 				}]
 			}
@@ -393,7 +393,7 @@
 			"Type": "AWS::Lambda::Permission",
 			"Properties": {
 				"FunctionName": {
-					"Ref": "AviatrixPollerSQSLambda"
+					"Ref": "AviatrixPollerLambda"
 				},
 				"Action": "lambda:InvokeFunction",
 				"Principal": "events.amazonaws.com",
