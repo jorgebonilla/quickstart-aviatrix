@@ -201,6 +201,7 @@ def handler(event, context):
                                       region_spoke,
                                       gwsize_spoke,
                                       subnet_spoke)
+            sleep(20)
             logger.info('Creating HA Gateway: spoke-%s', vpcid_spoke)
             #Send message to start HA gateway Deployment
             message = {}

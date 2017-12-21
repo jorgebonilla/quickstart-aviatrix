@@ -83,9 +83,20 @@
     "RegionMap" :
     {
       "us-east-1" : { "Name" : "ami-cc27a0b6" },
-      "us-east-2" : { "Name" : "ami-33476956" },
-      "us-west-1" : { "Name" : "ami-ee0a338e" },
-      "us-west-2" : { "Name" : "ami-d97aaba1"}
+      "us-east-2" : { "Name" : "ami-4ddbf328" },
+      "us-west-1" : { "Name" : "ami-c89d9aa8" },
+      "us-west-2" : { "Name" : "ami-c87fd2b0" },
+      "sa-east-1" : { "Name" : "ami-ddbbfab1" },
+      "eu-west-1" : { "Name" : "ami-1e38ba67" },
+      "eu-west-2" : { "Name" : "ami-cdeef7a9" },
+      "eu-west-3" : { "Name" : "ami-7b3c8b06" },
+      "eu-central-1" : { "Name" : "ami-5c811533" },
+      "ca-central-1" : { "Name" : "ami-ac5ce6c8" },
+      "ap-northeast-1" : { "Name" : "ami-9b5dd6fd" },
+      "ap-northeast-2" : { "Name" : "ami-38b11056" },
+      "ap-southeast-1" : { "Name" : "ami-966f9ef4" },
+      "ap-southeast-1" : { "Name" : "ami-91fa95ed" },
+      "ap-south-1" : { "Name" : "ami-f12e649e" }
     }
   },
   "Resources" :
