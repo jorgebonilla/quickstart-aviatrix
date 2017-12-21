@@ -129,11 +129,6 @@
                 },
                 {
                     "Effect": "Allow",
-                    "Action": "ec2:RunInstances",
-                    "Resource": "*"
-                },
-                {
-                    "Effect": "Allow",
                     "Action": [
                         "ec2:DeleteSecurityGroup",
                         "ec2:RevokeSecurityGroupEgress",
@@ -188,7 +183,11 @@
                         "ec2:DeleteTags",
                         "ec2:CreateVpc",
                         "ec2:DeleteVpc",
-                        "ec2:ModifyVpcAttribute"
+                        "ec2:ModifyVpcAttribute",
+                        "ec2:CreateCustomerGateway",
+                        "ec2:DeleteCustomerGateway",
+                        "ec2:CreateVpnConnection",
+                        "ec2:DeleteVpnConnection"
                     ],
                     "Resource": "*"
                 },
@@ -221,25 +220,8 @@
                     "Action": [
                         "s3:CreateBucket",
                         "s3:DeleteBucket",
-                        "s3:PutObject"
-                    ],
-                    "Resource": "*"
-                },
-                {
-                    "Effect": "Allow",
-                    "Action": [
-                        "cloudwatch:DeleteAlarms",
-                        "cloudwatch:PutMetricAlarm"
-                    ],
-                    "Resource": "*"
-                },
-                {
-                    "Effect": "Allow",
-                    "Action": [
-                        "sns:CreateTopic",
-                        "sns:DeleteTopic",
-                        "sns:Subscribe",
-                        "sns:Unsubscribe"
+                        "s3:PutObject",
+                        "s3:DeleteObject"
                     ],
                     "Resource": "*"
                 },
@@ -262,7 +244,6 @@
                 {
                     "Effect": "Allow",
                     "Action": [
-                        "iam:UpdateAssumeRolePolicy",
                         "sts:AssumeRole"
                     ],
                     "Resource": "arn:aws:iam::*"
@@ -270,7 +251,6 @@
                 {
                     "Effect": "Allow",
                     "Action": [
-                        "iam:UpdateAssumeRolePolicy",
                         "iam:PassRole",
                         "iam:AddRoleToInstanceProfile",
                         "iam:CreateInstanceProfile",
