@@ -250,6 +250,7 @@ def handler(event, context):
         region_spoke = body['region_spoke']
         vpcid_hub = body['vpcid_hub']
         vpcid_spoke = body['vpcid_spoke']
+        subnet_spoke = body['subnet_spoke']
         #Processing
         logger.info('Processing unpeer of VPC %s. Updating tag:aviatrix-spoke to processing', vpcid_spoke)
         tag_spoke(region_spoke,vpcid_spoke,'processing')
