@@ -260,6 +260,7 @@ def handler(event, context):
             controller.login(username,password)
             #Unpeering
             logger.info('UnPeering: hub-%s --> spoke-%s' % (vpcid_hub, vpcid_spoke))
+            tag_spoke(region_spoke,vpcid_spoke,'unpeering')
             controller.unpeering("hub-"+vpcid_hub, "spoke-"+vpcid_spoke)
             #get the list of existing Spokes
             controller.list_peers_vpc_pairs()
@@ -273,7 +274,7 @@ def handler(event, context):
             controller.delete_gateway("1", "spoke-"+vpcid_spoke)
 
             logger.info('Done unPeering %s. Updating tag:aviatrix-spoke to unpeered', vpcid_spoke)
-            tag_spoke(region_spoke,vpcid_spoke,'unpeering')
+            tag_spoke(region_spoke,vpcid_spoke,'unpeered')
             return {
                 'Status' : 'SUCCESS'
             }
