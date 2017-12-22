@@ -7,10 +7,21 @@ from urllib2 import Request, urlopen, URLError
 from aviatrix import Aviatrix
 #Needed for Lambda Custom call
 import cfnresponse
+import request
+import time
 
 #logging configuration
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+USAGE_URL = "http://127.0.0.1:5001"
+USAGE_DATA = { 'launchtime': time.time(),
+         'accountid':  boto3.client('sts').get_caller_identity().get('Account') }
+
+def send_usage_info(url,data):
+    # sending POST request
+    print data
+    r = requests.post(url = URL, data = data)
 
 def create_handler(event,context):
     #Read environment Variables
@@ -29,6 +40,8 @@ def create_handler(event,context):
     gwsize_hub = os.environ.get("GatewaySizeParam")
     gateway_queue = os.environ.get("GatewayQueue")
     gatewaytopic = os.environ.get("GatewayTopic")
+
+
 
     #Start the Controller Initialization process
     try:
@@ -83,6 +96,7 @@ def create_handler(event,context):
         Subject='Create Hub Gateway',
         Message=json.dumps(message)
     )
+    send_usage_info(USAGE_URL,USAGE_DATA)
     responseData = {
         "PhysicalResourceId": "arn:aws:fake:myID"
     }
