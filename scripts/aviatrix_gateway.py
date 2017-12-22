@@ -258,17 +258,20 @@ def handler(event, context):
             #Open connection to controller
             controller = Aviatrix(controller_ip)
             controller.login(username,password)
+            controller.list_peers_vpc_pairs()
+            found_pairs = controller.results
             #Unpeering
             logger.info('UnPeering: hub-%s --> spoke-%s' % (vpcid_hub, vpcid_spoke))
             tag_spoke(region_spoke,vpcid_spoke,'unpeering')
             controller.unpeering("hub-"+vpcid_hub, "spoke-"+vpcid_spoke)
             #get the list of existing Spokes
             controller.list_peers_vpc_pairs()
-            existing_spokes=[]
-            for peers in controller.results['pair_list']:
-                existing_spokes.append(peers['vpc_name2'])
+            existing_spokes = find_other_spokes(found_pairs)
             #Delete Transitive routers
-
+            if existing_spokes:
+                for existing_spoke in existing_spokes:
+                    controller.delete_extended_vpc_peer('spoke-' + vpcid_spoke, 'hub-' + vpcid_hub, existing_spoke['subnet'])
+                    controller.delete_extended_vpc_peer(existing_spoke['vpc_name'],'hub-' + vpcid_hub, subnet_spoke)
             #Spoke Gateway Delete
             logger.info('Deleting Gateway: spoke-%s', vpcid_spoke)
             controller.delete_gateway("1", "spoke-"+vpcid_spoke)

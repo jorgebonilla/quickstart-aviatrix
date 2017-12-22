@@ -112,9 +112,13 @@ class Aviatrix:
                                                         "source": source,
                                                         "nexthop": nexthop,
                                                         "reachable_cidr": reachable_cidr })
+    def delete_extended_vpc_peer(self,source,nexthop,reachable_cidr):
+        self.avx_api_call("POST", "delete_extended_vpc_peer", { "CID": self.CID,
+                                                                "source": source,
+                                                                "nexthop": nexthop,
+                                                                "reachable_cidr": reachable_cidr })
     def list_extended_vpc_peer(self):
         self.avx_api_call("POST", "list_extended_vpc_peer", { "CID": self.CID })
-
     def list_peers_vpc_pairs(self):
         self.avx_api_call("GET", "list_peer_vpc_pairs", { "CID": self.CID })
 
