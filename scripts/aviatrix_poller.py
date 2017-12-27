@@ -79,7 +79,7 @@ def handler(event, context):
             message['region_spoke'] = region_id
             message['gwsize_spoke'] = 't2.micro'
             message['vpcid_hub'] = vpcid_hub
-            logger.info('Found VPC %s waiting to be peered. Sending SQS message to Queue %s' % (message['vpcid_spoke'],gatewayqueue))
+            logger.info('Found VPC %s waiting to be unpeered. Sending SQS message to Queue %s' % (message['vpcid_spoke'],gatewayqueue))
             #Add New Gateway to SQS
             #sqs = boto3.resource('sqs')
             sns = boto3.client('sns')
