@@ -15,7 +15,7 @@ def find_subnets(region_id,vpc_id):
     ])
     subnetids=[]
     for association in subnets_with_igw['RouteTables'][0]['Associations']:
-      if association['Main'] == True:
+      if 'SubnetId' in association:
           subnet_temp = {}
           subnet_temp['SubnetId'] = association['SubnetId']
           subnetids.append(subnet_temp)
