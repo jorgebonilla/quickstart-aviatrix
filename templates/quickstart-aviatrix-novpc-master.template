@@ -112,7 +112,7 @@
       }
     },
     "AVXControllerStack": {
-        "DependsOn": "AviatrixIAMRolesStack",
+        "DependsOn": "AVXIAMRolesStack",
         "Type": "AWS::CloudFormation::Stack",
         "Properties": {
           "TemplateURL": {
@@ -136,7 +136,7 @@
               },
               "AviatrixInstanceProfile" : {
                 "Fn::GetAtt": [
-                    "AviatrixIAMRolesStack",
+                    "AVXIAMRolesStack",
                     "Outputs.AviatrixInstanceProfile"
                 ]
               }
@@ -144,7 +144,7 @@
         }
     },
     "AVXLambdaStack": {
-        "DependsOn": "AviatrixControllerStack",
+        "DependsOn": "AVXControllerStack",
         "Type": "AWS::CloudFormation::Stack",
         "Properties": {
           "TemplateURL": {
@@ -153,14 +153,14 @@
           "Parameters": {
               "controllerip" : {
                 "Fn::GetAtt": [
-                    "AviatrixControllerStack",
+                    "AVXControllerStack",
                     "Outputs.AviatrixControllerEIP"
                 ]
               },
               "username" : "admin",
               "privateip" : {
                 "Fn::GetAtt": [
-                    "AviatrixControllerStack",
+                    "AVXControllerStack",
                     "Outputs.AviatrixControllerPrivateIP"
                 ]
               },
@@ -172,19 +172,19 @@
               },
               "AviatrixRoleApp" : {
                 "Fn::GetAtt": [
-                    "AviatrixIAMRolesStack",
+                    "AVXIAMRolesStack",
                     "Outputs.AviatrixRoleAppARN"
                 ]
               },
               "AviatrixRoleEC2" : {
                 "Fn::GetAtt": [
-                    "AviatrixIAMRolesStack",
+                    "AVXIAMRolesStack",
                     "Outputs.AviatrixRoleEC2ARN"
                 ]
               },
               "Account" : {
                 "Fn::GetAtt": [
-                    "AviatrixIAMRolesStack",
+                    "AVXIAMRolesStack",
                     "Outputs.AccountId"
                 ]
               },
@@ -209,10 +209,10 @@
   },
   "Outputs" :
   {
-    "AccountId" : { "Description": "Amazon Account ID", "Value" : { "Fn::GetAtt" : [ "AviatrixIAMRolesStack", "Outputs.AccountId" ] } },
-    "AviatrixRoleAppARN" : { "Description": "AviatrixRoleApp ARN", "Value" : { "Fn::GetAtt" : [ "AviatrixIAMRolesStack", "Outputs.AviatrixRoleAppARN" ] } },
-    "AviatrixRoleEC2ARN" : { "Description": "AviatrixRoleEC2 ARN", "Value" : { "Fn::GetAtt" : [ "AviatrixIAMRolesStack", "Outputs.AviatrixRoleEC2ARN" ] } },
-    "AviatrixControllerEIP" : { "Description": "AviatrixController External IP", "Value" : { "Fn::GetAtt" : [ "AviatrixControllerStack", "Outputs.AviatrixControllerEIP" ] } },
-    "AviatrixControllerPrivateIP" : { "Description": "AviatrixController Private IP", "Value" : { "Fn::GetAtt" : [ "AviatrixControllerStack", "Outputs.AviatrixControllerPrivateIP" ] } }
+    "AccountId" : { "Description": "Amazon Account ID", "Value" : { "Fn::GetAtt" : [ "AVXIAMRolesStack", "Outputs.AccountId" ] } },
+    "AviatrixRoleAppARN" : { "Description": "AviatrixRoleApp ARN", "Value" : { "Fn::GetAtt" : [ "AVXIAMRolesStack", "Outputs.AviatrixRoleAppARN" ] } },
+    "AviatrixRoleEC2ARN" : { "Description": "AviatrixRoleEC2 ARN", "Value" : { "Fn::GetAtt" : [ "AVXIAMRolesStack", "Outputs.AviatrixRoleEC2ARN" ] } },
+    "AviatrixControllerEIP" : { "Description": "AviatrixController External IP", "Value" : { "Fn::GetAtt" : [ "AVXControllerStack", "Outputs.AviatrixControllerEIP" ] } },
+    "AviatrixControllerPrivateIP" : { "Description": "AviatrixController Private IP", "Value" : { "Fn::GetAtt" : [ "AVXControllerStack", "Outputs.AviatrixControllerPrivateIP" ] } }
   }
 }
