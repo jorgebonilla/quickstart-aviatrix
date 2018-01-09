@@ -102,6 +102,9 @@
       "Type" : "String"
     }
   },
+  "Conditions" : {
+    "NotBlankLicense" : { "Fn::Not" : [ { "Fn::Equals": [ { "Ref": "License" }, "" ] } ] }
+  },
   "Resources" :
   {
     "AviatrixVPCStack": {
@@ -240,6 +243,12 @@
                   "AviatrixVPCStack",
                   "Outputs.SubnetCIDRHA"
                 ]
+              },
+              "LicenseModel" : {
+                "Ref": "LicenseModel"
+              },
+              "License" : {
+                "Fn::If" : [ "NotBlankLicense", { "Ref": "License" }, "" ] 
               }
             }
           }

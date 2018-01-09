@@ -95,6 +95,9 @@
       "Type" : "String"
     }
   },
+  "Conditions" : {
+    "NotBlankLicense" : { "Fn::Not" : [ { "Fn::Equals": [ { "Ref": "License" }, "" ] } ] }
+  },
   "Resources" :
   {
     "AviatrixIAMRolesStack": {
@@ -198,7 +201,7 @@
                 "Ref": "LicenseModel"
               },
               "License" : {
-                "Ref": "License"
+                "Fn::If" : [ "NotBlankLicense", { "Ref": "License" }, "" ]
               }
             }
         }
