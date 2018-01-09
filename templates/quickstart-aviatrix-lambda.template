@@ -336,7 +336,7 @@
 				"TopicName": "AviatrixGatewayTopic"
 			}
 		},
-		"InvokeGWLambdaPermission": {
+		"InvokeGWLambda": {
 			"Type": "AWS::Lambda::Permission",
 			"Properties": {
 				"Action": "lambda:InvokeFunction",
@@ -397,7 +397,7 @@
 					"Id": {
 						"Fn::Join": ["-", [{
 							"Ref": "AWS::StackName"
-						}, "VGW-Poller-5min"]]
+						}, "Poller-1min"]]
 					},
 					"Arn": {
 						"Fn::GetAtt": ["AviatrixPollerLambda", "Arn"]
@@ -405,7 +405,7 @@
 				}]
 			}
 		},
-		"AviatrixPermissionForPollerEvent": {
+		"AVXPollerEventPerm": {
 			"Type": "AWS::Lambda::Permission",
 			"Properties": {
 				"FunctionName": {

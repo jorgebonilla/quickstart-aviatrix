@@ -107,7 +107,7 @@
   },
   "Resources" :
   {
-    "AviatrixVPCStack": {
+    "AVXVPCStack": {
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
           "TemplateURL": {
@@ -132,7 +132,7 @@
           }
       }
     },
-    "AviatrixIAMRolesStack": {
+    "AVXIAMRolesStack": {
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
           "TemplateURL": {
@@ -143,7 +143,7 @@
           }
       }
     },
-    "AviatrixControllerStack": {
+    "AVXControllerStack": {
         "DependsOn": "AviatrixIAMRolesStack",
         "Type": "AWS::CloudFormation::Stack",
         "Properties": {
@@ -181,7 +181,7 @@
           }
         }
     },
-    "AviatrixLambdaStack": {
+    "AVXLambdaStack": {
         "DependsOn": "AviatrixControllerStack",
         "Type": "AWS::CloudFormation::Stack",
         "Properties": {
@@ -248,7 +248,7 @@
                 "Ref": "LicenseModel"
               },
               "License" : {
-                "Fn::If" : [ "NotBlankLicense", { "Ref": "License" }, "" ] 
+                "Fn::If" : [ "NotBlankLicense", { "Ref": "License" }, "" ]
               }
             }
           }

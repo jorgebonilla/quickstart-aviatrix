@@ -100,7 +100,7 @@
   },
   "Resources" :
   {
-    "AviatrixIAMRolesStack": {
+    "AVXIAMRolesStack": {
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
           "TemplateURL": {
@@ -111,7 +111,7 @@
           }
       }
     },
-    "AviatrixControllerStack": {
+    "AVXControllerStack": {
         "DependsOn": "AviatrixIAMRolesStack",
         "Type": "AWS::CloudFormation::Stack",
         "Properties": {
@@ -143,7 +143,7 @@
           }
         }
     },
-    "AviatrixLambdaStack": {
+    "AVXLambdaStack": {
         "DependsOn": "AviatrixControllerStack",
         "Type": "AWS::CloudFormation::Stack",
         "Properties": {

@@ -45,7 +45,7 @@ def create_handler(event,context):
     gateway_queue = os.environ.get("GatewayQueue")
     gatewaytopic = os.environ.get("GatewayTopic")
     licensemodel = os.environ.get("LicenseModel")
-    license = os.environment.get("License")
+    license = os.environ.get("License")
 
     #Start the Controller Initialization process
     try:
