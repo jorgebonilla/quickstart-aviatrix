@@ -10,6 +10,7 @@
         { "Label" : { "default": "Amazon EC2 Configuration" }, "Parameters" : [ "KeyNameParam", "AllowedSubnetsParam" ] },
         { "Label" : { "default" : "VPC Configuration"}, "Parameters" : [ "NewVPCCIDRParam", "NewSubnetParam", "NewAZParam", "NewSubnetParamHA", "NewAZParamHA" ] },
         { "Label" : { "default" : "Controller Information" }, "Parameters" : [ "adminemailParam", "passwordParam", "ControllerSizeParam" ] },
+        { "Label" : { "default" : "Licensing Configuration"}, "Parameters" : [ "LicenseModel", "License" ] },
         { "Label" : { "default" : "Gateway Information" }, "Parameters" : [ "GatewaySizeParam" ] }
       ],
       "ParameterLabels" :
@@ -24,7 +25,9 @@
          "adminemailParam" : { "default" : "Administrator email address?"},
          "passwordParam" : { "default" : "Password for admin on Controller? (Complex Password)" },
          "ControllerSizeParam" : { "default" : "Instance Size for the Controller?"},
-         "GatewaySizeParam" : { "default" : "Instance Size for the Hub Gateway?" }
+         "GatewaySizeParam" : { "default" : "Instance Size for the Hub Gateway?" },
+         "LicenseModel" : { "default" : "Licensing Model?:"},
+         "License" :  { "default" : "Enter your license key:"}
        }
     }
   },
@@ -87,6 +90,16 @@
       "Default" : "t2.micro",
       "AllowedValues" : ["t2.nano", "t2.micro", "t2.small", "t2.medium", "t2.large", "m3.medium","m3.large","m3.xlarge","m4.large","m4.xlarge","c4.large","c4.xlarge"],
       "Description" : "Select an instance size. Default is t2.micro."
+    },
+    "LicenseModel" : {
+      "Description" : "Choose between BYOL or Utility License models.",
+      "Type" : "String",
+      "Default" : "UtilityLicense",
+      "AllowedValues" : ["UtilityLicense", "BYOL"]
+    },
+    "License": {
+      "Description" : "(Required, only if using BYOL License Model) If you don't have one, please contact sales@aviatrix.com. For UtilityLicense leave BLANK",
+      "Type" : "String"
     }
   },
   "Resources" :
@@ -149,6 +162,12 @@
               },
               "KeyNameParam" : {
                 "Ref": "KeyNameParam"
+              },
+              "LicenseModel" : {
+                "Ref": "LicenseModel"
+              },
+              "License" : {
+                "Ref": "License"
               },
               "AviatrixInstanceProfile" : {
                 "Fn::GetAtt": [

@@ -67,6 +67,16 @@
 			"Default": "t2.small",
 			"AllowedValues": ["t2.small", "t2.large", "m3.medium", "m3.large", "m3.xlarge", "m4.large", "m4.xlarge", "c4.large", "c4.xlarge"],
 			"Description": "Select an instance size. Default is t2.small."
+		},
+		"LicenseModel" : {
+			"Description" : "Choose between BYOL or Utility License models.",
+			"Type" : "String",
+			"Default" : "UtilityLicense",
+			"AllowedValues" : ["UtilityLicense", "BYOL"]
+		},
+		"License": {
+			"Description" : "(Required, only if using BYOL License Model) If you don't have one, please contact sales@aviatrix.com. For UtilityLicense leave BLANK",
+			"Type" : "String"
 		}
 	},
 	"Resources": {
@@ -240,6 +250,12 @@
 						},
 						"GatewayTopic": {
 							"Ref": "AviatrixGWTopic"
+						},
+						"LicenseModel" : {
+							"Ref": "LicenseModel"
+						},
+						"License" : {
+							"Ref": "License"
 						}
 					}
 				},

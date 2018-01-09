@@ -9,7 +9,9 @@
       [
         { "Label" : { "default" : "Network Configuration" }, "Parameters" : [ "VPCParam", "SubnetParam" ] },
         { "Label" : { "default" : "Amazon EC2 Configuration" }, "Parameters" : [ "KeyNameParam", "ControllerSizeParam"] },
-        { "Label" : { "default" : "Aviatrix Roles Configuration"}, "Parameters" : [ "AviatrixInstanceProfile" ] }
+        { "Label" : { "default" : "Aviatrix Roles Configuration"}, "Parameters" : [ "AviatrixInstanceProfile" ] },
+        { "Label" : { "default" : "Security Configuration"}, "Parameters" : [ "AllowedSubnetsParam" ] },
+        { "Label" : { "default" : "Licensing Configuration"}, "Parameters" : [ "LicenseModel", "License" ] }
       ],
       "ParameterLabels" :
       {
@@ -18,7 +20,9 @@
          "KeyNameParam" : { "default" : "Which keypair will be used?" },
          "AllowedSubnetsParam" : { "default" : "What is your management subnet?"},
          "AviatrixInstanceProfile" : { "default": "If created by CF use: aviatrix-role-ec2" },
-         "ControllerSizeParam" : { "default" : "Instance Size for the Controller?"}
+         "ControllerSizeParam" : { "default" : "Instance Size for the Controller?"},
+         "LicenseModel" : { "default" : "Licensing Model?:"},
+         "License" :  { "default" : "Enter your license key:"}
       }
     }
   },
@@ -35,6 +39,16 @@
       "Default" : "t2.large",
       "AllowedValues" : ["t2.large", "m3.medium","m3.large","m3.xlarge","m4.large","m4.xlarge","c4.large","c4.xlarge"],
       "Description" : "Select an instance size. Default is t2.large."
+    },
+    "LicenseModel" : {
+      "Description" : "Choose between BYOL or Utility License models.",
+      "Type" : "String",
+      "Default" : "UtilityLicense",
+      "AllowedValues" : ["UtilityLicense", "BYOL"]
+    },
+    "License": {
+      "Description" : "(Required, only if using BYOL License Model) If you don't have one, please contact sales@aviatrix.com. For UtilityLicense leave BLANK",
+      "Type" : "String"
     }
   },
   "Rules": {
@@ -82,21 +96,21 @@
   {
     "RegionMap" :
     {
-      "us-east-1" : { "Name" : "ami-cc27a0b6" },
-      "us-east-2" : { "Name" : "ami-4ddbf328" },
-      "us-west-1" : { "Name" : "ami-c89d9aa8" },
-      "us-west-2" : { "Name" : "ami-c87fd2b0" },
-      "sa-east-1" : { "Name" : "ami-ddbbfab1" },
-      "eu-west-1" : { "Name" : "ami-1e38ba67" },
-      "eu-west-2" : { "Name" : "ami-cdeef7a9" },
-      "eu-west-3" : { "Name" : "ami-7b3c8b06" },
-      "eu-central-1" : { "Name" : "ami-5c811533" },
-      "ca-central-1" : { "Name" : "ami-ac5ce6c8" },
-      "ap-northeast-1" : { "Name" : "ami-9b5dd6fd" },
-      "ap-northeast-2" : { "Name" : "ami-38b11056" },
-      "ap-southeast-1" : { "Name" : "ami-966f9ef4" },
-      "ap-southeast-1" : { "Name" : "ami-91fa95ed" },
-      "ap-south-1" : { "Name" : "ami-f12e649e" }
+      "us-east-1" : { "UtilityLicense" : "ami-cc27a0b6",  "BYOL": "ami-cc27a0b6" },
+      "us-east-2" : { "UtilityLicense" : "ami-4ddbf328",  "BYOL": "ami-4ddbf328" },
+      "us-west-1" : { "UtilityLicense" : "ami-c89d9aa8",  "BYOL": "ami-c89d9aa8" },
+      "us-west-2" : { "UtilityLicense" : "ami-c87fd2b0",  "BYOL": "ami-c87fd2b0" },
+      "sa-east-1" : { "UtilityLicense" : "ami-ddbbfab1",  "BYOL": "ami-ddbbfab1" },
+      "eu-west-1" : { "UtilityLicense" : "ami-1e38ba67",  "BYOL": "ami-1e38ba67" },
+      "eu-west-2" : { "UtilityLicense" : "ami-cdeef7a9",  "BYOL": "ami-cdeef7a9" },
+      "eu-west-3" : { "UtilityLicense" : "ami-7b3c8b06",  "BYOL": "ami-7b3c8b06" },
+      "eu-central-1" : { "UtilityLicense" : "ami-5c811533",  "BYOL": "ami-5c811533" },
+      "ca-central-1" : { "UtilityLicense" : "ami-ac5ce6c8",  "BYOL": "ami-ac5ce6c8" },
+      "ap-northeast-1" : { "UtilityLicense" : "ami-9b5dd6fd",  "BYOL": "ami-9b5dd6fd" },
+      "ap-northeast-2" : { "UtilityLicense" : "ami-38b11056",  "BYOL": "ami-38b11056" },
+      "ap-southeast-1" : { "UtilityLicense" : "ami-966f9ef4",  "BYOL": "ami-966f9ef4" },
+      "ap-southeast-1" : { "UtilityLicense" : "ami-91fa95ed",  "BYOL": "ami-91fa95ed" },
+      "ap-south-1" : { "UtilityLicense" : "ami-f12e649e",  "BYOL": "ami-f12e649e" }
     }
   },
   "Resources" :
@@ -106,7 +120,7 @@
       "Type" : "AWS::EC2::Instance",
       "Properties" :
       {
-        "ImageId" : { "Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region" }, "Name" ]},
+        "ImageId" : { "Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region" }, { "Ref": "LicenseModel" } ] },
         "KeyName" : { "Ref": "KeyNameParam" },
         "InstanceType": { "Ref" : "ControllerSizeParam" },
         "IamInstanceProfile" : {"Ref":  "AviatrixInstanceProfile" },

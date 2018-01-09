@@ -44,6 +44,8 @@ def create_handler(event,context):
     gwsize_hub = os.environ.get("GatewaySizeParam")
     gateway_queue = os.environ.get("GatewayQueue")
     gatewaytopic = os.environ.get("GatewayTopic")
+    licensemodel = os.environ.get("LicenseModel")
+    license = os.environment.get("License")
 
     #Start the Controller Initialization process
     try:
@@ -64,6 +66,8 @@ def create_handler(event,context):
     try:
         controller = Aviatrix(controller_ip)
         controller.login(username,password)
+        if licensemodel == "BYOL":
+            controller.setup_customer_id(license)
         controller.setup_account_profile("AWSAccount",
                                          password,
                                          admin_email,
