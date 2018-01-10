@@ -40,7 +40,22 @@ def handler(event, context):
         region_id=region['RegionName']
         logger.info('Checking region: %s',region_id)
         ec2=boto3.client('ec2',region_name=region_id)
-
+        #Find VPCs with Tag:aviatrix-spoke = processing
+        #Create Gateway for it and Peer, when done change the Tag:aviatrix-spoke = peered
+        vpcs=ec2.describe_vpcs(Filters=[
+            { 'Name': 'state', 'Values': [ 'available' ] },
+            { 'Name': 'tag:aviatrix-spoke', 'Values': [ 'processing', 'unpeering' ] }
+        ])
+        #logger.info('vpcs with tag:aviatrix-spoke is processing or unpeering: %s:' % str(vpcs))
+        if vpcs['Vpcs']: # ucc is busy now
+            logger.info('ucc is busy in adding/removing spoke of %s:' % str(vpcs['Vpcs']))
+            return {
+                'Status' : 'SUCCESS'
+            }
+    for region in regions['Regions']:
+        region_id=region['RegionName']
+        logger.info('Checking region: %s',region_id)
+        ec2=boto3.client('ec2',region_name=region_id)
         #Find VPCs with Tag:aviatrix-spoke = true
         #Create Gateway for it and Peer, when done change the Tag:aviatrix-spoke = peered
         vpcs=ec2.describe_vpcs(Filters=[
@@ -55,10 +70,15 @@ def handler(event, context):
             message['gwsize_spoke'] = 't2.micro'
             message['vpcid_hub'] = vpcid_hub
             #Finding the Public Subnet
-            subnets=find_subnets(message['region_spoke'],message['vpcid_spoke'])
-            message['subnet_spoke'] = subnets[0]['CidrBlock']
-            message['subnet_spoke_ha'] = subnets[1]['CidrBlock']
-            message['subnet_spoke_name'] = subnets[1]['Name']
+            try:
+                subnets=find_subnets(message['region_spoke'],message['vpcid_spoke'])
+                message['subnet_spoke'] = subnets[0]['CidrBlock']
+                message['subnet_spoke_ha'] = subnets[1]['CidrBlock']
+                message['subnet_spoke_name'] = subnets[1]['Name']
+            except:
+                logger.warning('!!!your spoke vpc subnet is not setup correctly!!!')
+                continue
+            message['vpc_cidr_spoke'] = vpc_peering['CidrBlock']
             logger.info('Found VPC %s waiting to be peered. Sending SQS message to Queue %s' % (message['vpcid_spoke'],gatewayqueue))
             #Add New Gateway to SNS
             sns = boto3.client('sns')
@@ -67,6 +87,10 @@ def handler(event, context):
                 Subject='New Spoke Gateway',
                 Message=json.dumps(message)
             )
+            # only add one spoke at a time, return now
+            return {
+                'Status' : 'SUCCESS'
+            }
         vpcs=ec2.describe_vpcs(Filters=[
             { 'Name': 'state', 'Values': [ 'available' ] },
             { 'Name': 'tag:aviatrix-spoke', 'Values': [ 'false', 'False', 'FALSE' ] }
@@ -90,6 +114,9 @@ def handler(event, context):
                 Subject='Delete Spoke Gateway',
                 Message=json.dumps(message)
             )
+            return {
+                'Status' : 'SUCCESS'
+            }
     return {
         'Status' : 'SUCCESS'
     }
