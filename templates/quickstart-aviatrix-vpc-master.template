@@ -84,7 +84,7 @@
     {
       "Type" : "String",
       "Default" : "t2.large",
-      "AllowedValues" : ["t2.small", "t2.medium", "t2.large", "m3.medium","m3.large","m3.xlarge","m4.large","m4.xlarge","c4.large","c4.xlarge"],
+      "AllowedValues" : ["t2.large", "m3.medium","m3.large","m3.xlarge","m4.large","m4.xlarge","c4.large","c4.xlarge"],
       "Description" : "Select an instance size. Default is t2.large."
     },
     "HubGWSizeParam":
