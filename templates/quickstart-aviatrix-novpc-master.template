@@ -40,10 +40,10 @@
       "Description": "(Required) Select Your VPC"
     },
     "SubnetParam": {
-      "Type" : "AWS::EC2::Subnet::Id",
+      "Type" : "AWS::EC2::Subnet::Id"
     },
     "SubnetParamHA": {
-      "Type" : "AWS::EC2::Subnet::Id",
+      "Type" : "AWS::EC2::Subnet::Id"
     },
     "SubnetCIDRParam": {
       "Type" : "String",

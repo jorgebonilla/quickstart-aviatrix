@@ -41,7 +41,7 @@
       "Description" : "Choose between BYOL or Utility License models.",
       "Type" : "String",
       "Default" : "UtilityLicense",
-      "AllowedValues" : ["UtilityLicense", "BYOL"]
+      "AllowedValues" : [ "UtilityLicense", "BYOL" ]
     },
     "License": {
       "Description" : "(Required, only if using BYOL License Model) If you don't have one, please contact sales@aviatrix.com. For UtilityLicense leave BLANK",
