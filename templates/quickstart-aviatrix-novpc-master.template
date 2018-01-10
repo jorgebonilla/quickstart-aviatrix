@@ -11,7 +11,8 @@
         { "Label" : { "default" : "Existing VPC Configuration" }, "Parameters" : [ "VPCParam", "SubnetParam", "SubnetCIDRParam", "SubnetParamHA", "SubnetCIDRParamHA"] },
         { "Label" : { "default" : "Controller Information" }, "Parameters" : [ "adminemailParam", "passwordParam", "ControllerSizeParam" ] },
         { "Label" : { "default" : "Licensing Configuration"}, "Parameters" : [ "LicenseModel", "License" ] },
-        { "Label" : { "default" : "Gateway Information" }, "Parameters" : [ "HubGWSizeParam", "SpokeGWSizeParam" ] }
+        { "Label" : { "default" : "Gateway Information" }, "Parameters" : [ "HubGWSizeParam", "SpokeGWSizeParam" ] },
+        { "Label" : { "default" : "IAM Roles Information" }, "Parameters" : [ "IAMRoleParam" ] }
       ],
       "ParameterLabels" :
       {
@@ -27,6 +28,7 @@
          "ControllerSizeParam" : { "default" : "Instance Size for the Aviatrix Controller?"},
          "HubGWSizeParam" : { "default" : "Instance Size for the Aviatrix Hub Gateway?" },
          "SpokeGWSizeParam" : { "default" : "Instance Size for the Aviatrix Spoke Gateways?" },
+         "IAMRoleParam" : { "default" : "Select \"Create New\" if Aviatrix IAM role has not been created yet, select aviatrix-role-ec2 if aviatrix-role-ec2  IAM role already exists"},
          "LicenseModel" : { "default" : "Licensing Model?:"},
          "License" :  { "default" : "Enter your license key:"}
        }
@@ -104,12 +106,14 @@
     }
   },
   "Conditions" : {
+    "CreateIAMRoles" : { "Fn::Equals": [ { "Ref": "IAMRoleParam" }, "Create New" ]},
     "NotBlankLicense" : { "Fn::Not" : [ { "Fn::Equals": [ { "Ref": "License" }, "" ] } ] }
   },
   "Resources" :
   {
     "AVXIAMRolesStack": {
       "Type": "AWS::CloudFormation::Stack",
+      "Condition" : "CreateIAMRoles",
       "Properties": {
           "TemplateURL": {
               "Fn::Sub": "https://s3.amazonaws.com/quickstart-aviatrix-us-east-1/templates/quickstart-aviatrix-iamroles.template"
