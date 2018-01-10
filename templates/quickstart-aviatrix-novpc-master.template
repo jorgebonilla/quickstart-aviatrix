@@ -7,7 +7,7 @@
     {
       "ParameterGroups" :
       [
-        { "Label" : { "default": "Amazon EC2 Configuration" }, "Parameters" : [ "KeyNameParam", "AllowedSubnetsParam" ] },
+        { "Label" : { "default": "Amazon EC2 Configuration" }, "Parameters" : [ "KeyNameParam" ] },
         { "Label" : { "default" : "Existing VPC Configuration" }, "Parameters" : [ "VPCParam", "SubnetParam", "SubnetCIDRParam", "SubnetParamHA", "SubnetCIDRParamHA"] },
         { "Label" : { "default" : "Controller Information" }, "Parameters" : [ "adminemailParam", "passwordParam", "ControllerSizeParam" ] },
         { "Label" : { "default" : "Licensing Configuration"}, "Parameters" : [ "LicenseModel", "License" ] },
@@ -22,7 +22,6 @@
          "SubnetCIDRParam" : { "default" : "Insert the CIDR for this subnet" },
          "SubnetCIDRParamHA" : { "default" : "Insert the CIDR for the HA subnet" },
          "KeyNameParam" : { "default" : "Which keypair will be used?" },
-         "AllowedSubnetsParam" : { "default" : "What is your management subnet?"},
          "adminemailParam" : { "default" : "Administrator email address?"},
          "passwordParam" : { "default" : "Password for admin on Aviatrix Controller? (Complex Password)" },
          "ControllerSizeParam" : { "default" : "Instance Size for the Aviatrix Controller?"},
@@ -59,10 +58,6 @@
     "KeyNameParam": {
       "Type": "AWS::EC2::KeyPair::KeyName",
       "Description": "(Required) Select your Keypair"
-    },
-    "AllowedSubnetsParam": {
-      "Type": "String", "Description": "(Required) Management Subnets allowed to manage the controller (Default: 0.0.0.0/0)",
-      "Default": "0.0.0.0/0"
     },
     "adminemailParam": {
       "Type": "String",

@@ -7,7 +7,7 @@
     {
       "ParameterGroups" :
       [
-        { "Label" : { "default": "Amazon EC2 Configuration" }, "Parameters" : [ "KeyNameParam", "AllowedSubnetsParam" ] },
+        { "Label" : { "default": "Amazon EC2 Configuration" }, "Parameters" : [ "KeyNameParam" ] },
         { "Label" : { "default" : "VPC Configuration"}, "Parameters" : [ "NewVPCCIDRParam", "NewSubnetParam", "NewAZParam", "NewSubnetParamHA", "NewAZParamHA" ] },
         { "Label" : { "default" : "Controller Information" }, "Parameters" : [ "adminemailParam", "passwordParam", "ControllerSizeParam" ] },
         { "Label" : { "default" : "Licensing Configuration"}, "Parameters" : [ "LicenseModel", "License" ] },
@@ -22,7 +22,6 @@
          "NewAZParam" : { "default": "Availability zone" },
          "NewAZParamHA" : { "default": "Availability zone for HA"},
          "KeyNameParam" : { "default" : "Which keypair will be used?" },
-         "AllowedSubnetsParam" : { "default" : "What is your management subnet?"},
          "adminemailParam" : { "default" : "Administrator email address?"},
          "passwordParam" : { "default" : "Password for admin on Aviatrix Controller? (Complex Password)" },
          "ControllerSizeParam" : { "default" : "Instance Size for the Aviatrix Controller?"},
@@ -66,10 +65,6 @@
     "KeyNameParam": {
       "Type": "AWS::EC2::KeyPair::KeyName",
       "Description": "(Required) Select your Keypair"
-    },
-    "AllowedSubnetsParam": {
-      "Type": "String", "Description": "(Required) Management networks that will be allowed access the controller (Default: 0.0.0.0/0)",
-      "Default": "0.0.0.0/0"
     },
     "adminemailParam": {
       "Type": "String",
