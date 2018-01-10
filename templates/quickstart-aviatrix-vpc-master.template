@@ -11,7 +11,7 @@
         { "Label" : { "default" : "VPC Configuration"}, "Parameters" : [ "NewVPCCIDRParam", "NewSubnetParam", "NewAZParam", "NewSubnetParamHA", "NewAZParamHA" ] },
         { "Label" : { "default" : "Controller Information" }, "Parameters" : [ "adminemailParam", "passwordParam", "ControllerSizeParam" ] },
         { "Label" : { "default" : "Licensing Configuration"}, "Parameters" : [ "LicenseModel", "License" ] },
-        { "Label" : { "default" : "Gateway Information" }, "Parameters" : [ "HubGWSizeParam", "SpokeGWSizeParam"] },
+        { "Label" : { "default" : "Gateway Information" }, "Parameters" : [ "HubGWSizeParam", "SpokeGWSizeParam", "SpokeTag"] },
         { "Label" : { "default" : "IAM Roles Information" }, "Parameters" : [ "IAMRoleParam" ] }
       ],
       "ParameterLabels" :
@@ -27,6 +27,7 @@
          "ControllerSizeParam" : { "default" : "Instance Size for the Aviatrix Controller?"},
          "HubGWSizeParam" : { "default" : "Instance Size for the Aviatrix Hub Gateway?" },
          "SpokeGWSizeParam" : { "default" : "Instance Size for the Aviatrix Spoke Gateways?" },
+         "SpokeTag" : { "default" : "Select the Tag that you want to use to mark the Spokes?" },
          "IAMRoleParam" : { "default" : "Select \"Create New\" if Aviatrix IAM role has not been created yet, select aviatrix-role-ec2 if aviatrix-role-ec2  IAM role already exists"},
          "LicenseModel" : { "default" : "Licensing Model?:"},
          "License" :  { "default" : "Enter your license key:"}
@@ -95,6 +96,11 @@
       "Default" : "t2.micro",
       "AllowedValues" : ["t2.nano", "t2.micro", "t2.small", "t2.medium", "t2.large", "m3.medium","m3.large","m3.xlarge","m4.large","m4.xlarge","c4.large","c4.xlarge"],
       "Description" : "Select an instance size. Default is t2.micro."
+    },
+    "SpokeTag" :{
+      "Type" : "String",
+      "Default" : "aviatrix-spoke",
+      "Description" : "Enter the tag to mark the Spokes. Default is aviatrix-spoke."
     },
     "IAMRoleParam" : {
            "Description" : "Determine if IAM roles aviatrix-role-ec2 and aviatrix-role-app should be created.",
@@ -266,6 +272,9 @@
           		"SpokeGWSizeParam":
               {
                 "Ref": "SpokeGWSizeParam"
+              },
+              "SpokeTag": {
+                "Ref": "SpokeTag"
               },
               "LicenseModel" : {
                 "Ref": "LicenseModel"

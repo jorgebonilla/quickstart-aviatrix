@@ -35,17 +35,18 @@ def handler(event, context):
     vpcid_hub = os.environ.get("HubVPC")
     gwsize_spoke = os.environ.get("SpokeGWSizeParam")
     gatewaytopic = os.environ.get("GatewayTopic")
+    spoketag = os.environ.get("SpokeTag")
     ec2=boto3.client('ec2',region_name='us-east-1')
     regions=ec2.describe_regions()
     for region in regions['Regions']:
         region_id=region['RegionName']
-        logger.info('Checking region: %s',region_id)
+        logger.info('Checking region: %s for VPC that are processing or unpeering',region_id)
         ec2=boto3.client('ec2',region_name=region_id)
         #Find VPCs with Tag:aviatrix-spoke = processing
         #Create Gateway for it and Peer, when done change the Tag:aviatrix-spoke = peered
         vpcs=ec2.describe_vpcs(Filters=[
             { 'Name': 'state', 'Values': [ 'available' ] },
-            { 'Name': 'tag:aviatrix-spoke', 'Values': [ 'processing', 'unpeering' ] }
+            { 'Name': 'tag:'+spoketag, 'Values': [ 'processing', 'unpeering' ] }
         ])
         #logger.info('vpcs with tag:aviatrix-spoke is processing or unpeering: %s:' % str(vpcs))
         if vpcs['Vpcs']: # ucc is busy now
@@ -55,13 +56,13 @@ def handler(event, context):
             }
     for region in regions['Regions']:
         region_id=region['RegionName']
-        logger.info('Checking region: %s',region_id)
+        logger.info('Checking region: %s for VPC tagged %s' % (region_id,spoketag))
         ec2=boto3.client('ec2',region_name=region_id)
         #Find VPCs with Tag:aviatrix-spoke = true
         #Create Gateway for it and Peer, when done change the Tag:aviatrix-spoke = peered
         vpcs=ec2.describe_vpcs(Filters=[
             { 'Name': 'state', 'Values': [ 'available' ] },
-            { 'Name': 'tag:aviatrix-spoke', 'Values': [ 'true', 'True', 'TRUE', 'test' ] }
+            { 'Name': 'tag:'+spoketag, 'Values': [ 'true', 'True', 'TRUE', 'test' ] }
         ])
         for vpc_peering in vpcs['Vpcs']:
             message = {}
@@ -94,7 +95,7 @@ def handler(event, context):
             }
         vpcs=ec2.describe_vpcs(Filters=[
             { 'Name': 'state', 'Values': [ 'available' ] },
-            { 'Name': 'tag:aviatrix-spoke', 'Values': [ 'false', 'False', 'FALSE' ] }
+            { 'Name': 'tag:'+spoketag, 'Values': [ 'false', 'False', 'FALSE' ] }
         ])
         for vpc_peering in vpcs['Vpcs']:
             message = {}
