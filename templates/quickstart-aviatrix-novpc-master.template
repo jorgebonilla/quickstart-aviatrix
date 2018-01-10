@@ -94,6 +94,12 @@
       "AllowedValues" : ["t2.nano", "t2.micro", "t2.small", "t2.medium", "t2.large", "m3.medium","m3.large","m3.xlarge","m4.large","m4.xlarge","c4.large","c4.xlarge"],
       "Description" : "Select an instance size. Default is t2.micro."
     },
+    "IAMRoleParam" : {
+           "Description" : "Determine if IAM roles aviatrix-role-ec2 and aviatrix-role-app should be created.",
+           "Default" : "Create New",
+           "Type" : "String",
+           "AllowedValues" : ["aviatrix-role-ec2", "Create New"]
+     },
     "LicenseModel" : {
       "Description" : "Choose between BYOL or Utility License models.",
       "Type" : "String",
