@@ -41,7 +41,7 @@ def create_handler(event,context):
     subnet_hub = os.environ.get("SubnetParam")
     subnet_hubHA = os.environ.get("SubnetParamHA")
     region_hub = os.environ.get("Region")
-    gwsize_hub = os.environ.get("GatewaySizeParam")
+    gwsize_hub = os.environ.get("HubGWSizeParam")
     gateway_queue = os.environ.get("GatewayQueue")
     gatewaytopic = os.environ.get("GatewayTopic")
     licensemodel = os.environ.get("LicenseModel")
@@ -123,7 +123,7 @@ def delete_handler(event, context):
     subnet_hub = os.environ.get("SubnetParam")
     subnet_hubHA = os.environ.get("SubnetParamHA")
     region_hub = os.environ.get("Region")
-    gwsize_hub = os.environ.get("GatewaySizeParam")
+    gwsize_hub = os.environ.get("HubGWSizeParam")
     gateway_queue = os.environ.get("GatewayQueue")
     gatewaytopic = os.environ.get("GatewayTopic")
     #Delete all tunnels and gateways

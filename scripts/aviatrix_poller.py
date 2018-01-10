@@ -33,6 +33,7 @@ def handler(event, context):
     #Read environment Variables
     gatewayqueue = os.environ.get("GatewayQueue")
     vpcid_hub = os.environ.get("HubVPC")
+    gwsize_spoke = os.environ.get("SpokeGWSizeParam")
     gatewaytopic = os.environ.get("GatewayTopic")
     ec2=boto3.client('ec2',region_name='us-east-1')
     regions=ec2.describe_regions()
@@ -67,7 +68,7 @@ def handler(event, context):
             message['action'] = 'deploygateway'
             message['vpcid_spoke'] = vpc_peering['VpcId']
             message['region_spoke'] = region_id
-            message['gwsize_spoke'] = 't2.micro'
+            message['gwsize_spoke'] = gwsize_spoke
             message['vpcid_hub'] = vpcid_hub
             #Finding the Public Subnet
             try:
@@ -101,7 +102,7 @@ def handler(event, context):
             message['subnet_spoke'] = vpc_peering['CidrBlock']
             message['vpcid_spoke'] = vpc_peering['VpcId']
             message['region_spoke'] = region_id
-            message['gwsize_spoke'] = 't2.micro'
+            message['gwsize_spoke'] = gwsize_spoke
             message['vpcid_hub'] = vpcid_hub
             logger.info('Found VPC %s waiting to be unpeered. Sending SQS message to Queue %s' % (message['vpcid_spoke'],gatewayqueue))
             #Add New Gateway to SQS

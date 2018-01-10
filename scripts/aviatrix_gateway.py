@@ -69,12 +69,12 @@ def find_other_spokes(vpc_pairs):
     regions=ec2.describe_regions()
     if vpc_pairs:
         existing_spokes=[]
-        for vpc_name in vpc_pairs['pair_list']:
-            vpc_name_temp = {}
-            vpc_name_temp['vpc_name'] = vpc_name['vpc_name2']
-            for region in regions['Regions']:
-                region_id=region['RegionName']
-                ec2=boto3.client('ec2',region_name=region_id)
+        vpc_name_temp = {}
+        for region in regions['Regions']:
+            region_id=region['RegionName']
+            ec2=boto3.client('ec2',region_name=region_id)
+            for vpc_name in vpc_pairs['pair_list']:
+                vpc_name_temp['vpc_name'] = vpc_name['vpc_name2']
                 vpc_info=ec2.describe_vpcs(Filters=[
                     { 'Name': 'vpc-id', 'Values':[ vpc_name['vpc_name2'][6:] ]}
                     ])
@@ -171,6 +171,22 @@ def handler(event, context):
         logger.info('Creating HA Gateway: %s', vpcid_ha)
         controller.enable_vpc_ha(vpcid_ha,specific_subnet)
         logger.info('Created HA Gateway: %s', vpcid_ha)
+        sleep(10)
+        #Call to create the peering And routing
+        message = {}
+        message['action'] = 'create_peering'
+        message['vpcid_ha'] = 'spoke-' + vpcid_spoke
+        message['region_ha'] = region_spoke
+        message['subnet_ha'] = subnet_spoke_ha
+        message['subnet_name'] = subnet_spoke_name
+        #Add New Gateway to SNS
+        sns = boto3.client('sns')
+        sns.publish(
+            TopicArn=gatewaytopic,
+            Subject='Create Peering and Routing for new GW',
+            Message=json.dumps(message)
+        )
+
         logger.info('Done with HA Gateway Deployment')
     #Case Deploy Gateway
     elif body['action'] == 'deploygateway':
@@ -218,33 +234,44 @@ def handler(event, context):
                 Subject='New Hub HA Gateway',
                 Message=json.dumps(message)
             )
-            #Peering Hub/Spoke
-            logger.info('Peering: hub-%s --> spoke-%s' % (vpcid_hub, vpcid_spoke))
-            controller.peering("hub-"+vpcid_hub, "spoke-"+vpcid_spoke)
-            #Creating the transitive connections
-            existing_spokes = find_other_spokes(found_pairs)
-            logger.info('Creating Transitive routes, Data: %s' % existing_spokes)
-            if existing_spokes:
-                for existing_spoke in existing_spokes:
-                    controller.add_extended_vpc_peer('spoke-' + vpcid_spoke, 'hub-' + vpcid_hub, existing_spoke['subnet'])
-                    controller.add_extended_vpc_peer(existing_spoke['vpc_name'],'hub-' + vpcid_hub, vpc_cidr_spoke)
-            logger.info('Finished creating Transitive routes')
-            #if len(existing_spokes) != 0:
-                #Create transitive routes for each spoke
-                #for spoke in existing_spokes:
-                    #controller.extended_vpc_peer(Args)
-
-            logger.info('Done Peering %s. Updating tag:aviatrix-spoke to peered', vpcid_spoke)
-            tag_spoke(region_spoke,vpcid_spoke,'peered')
-            return {
-            'Status' : 'SUCCESS'
-            }
         except URLError, e:
             logger.info('Failed request. Error: %s', controller.results)
             return {
                 'Status' : 'FAILURE',
                 'Error' : controller.results
             }
+    #Case Deploy peering
+    elif body['action'] == 'create_peering':
+        #Variables
+        subnet_spoke = body['subnet_spoke']
+        subnet_spoke_ha = body['subnet_spoke_ha']
+        subnet_spoke_name = body['subnet_spoke_name']
+        vpcid_spoke = body['vpcid_spoke']
+        region_spoke = body['region_spoke']
+        gwsize_spoke = body['gwsize_spoke']
+        vpcid_hub = body['vpcid_hub']
+        vpc_cidr_spoke = body['vpc_cidr_spoke']
+        #Peering Hub/Spoke
+        logger.info('Peering: hub-%s --> spoke-%s' % (vpcid_hub, vpcid_spoke))
+        controller.peering("hub-"+vpcid_hub, "spoke-"+vpcid_spoke)
+        #Creating the transitive connections
+        existing_spokes = find_other_spokes(found_pairs)
+        logger.info('Creating Transitive routes, Data: %s' % existing_spokes)
+        if existing_spokes:
+            for existing_spoke in existing_spokes:
+                controller.add_extended_vpc_peer('spoke-' + vpcid_spoke, 'hub-' + vpcid_hub, existing_spoke['subnet'])
+                controller.add_extended_vpc_peer(existing_spoke['vpc_name'],'hub-' + vpcid_hub, vpc_cidr_spoke)
+        logger.info('Finished creating Transitive routes')
+        #if len(existing_spokes) != 0:
+            #Create transitive routes for each spoke
+            #for spoke in existing_spokes:
+                #controller.extended_vpc_peer(Args)
+
+        logger.info('Done Peering %s. Updating tag:aviatrix-spoke to peered', vpcid_spoke)
+        tag_spoke(region_spoke,vpcid_spoke,'peered')
+        return {
+        'Status' : 'SUCCESS'
+        }
     #Case Delete Gateway
     elif body['action'] == 'deletegateway':
         #Variables
