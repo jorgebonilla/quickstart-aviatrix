@@ -62,13 +62,13 @@ def handler(event, context):
         region_id=region['RegionName']
         logger.info('Checking region: %s for VPC that are processing or unpeering',region_id)
         ec2=boto3.client('ec2',region_name=region_id)
-        #Find VPCs with Tag:aviatrix-spoke = processing
-        #Create Gateway for it and Peer, when done change the Tag:aviatrix-spoke = peered
+        #Find VPCs with Tag:spoketag = processing
+        #Create Gateway for it and Peer, when done change the Tag:spoketag = peered
         vpcs=ec2.describe_vpcs(Filters=[
             { 'Name': 'state', 'Values': [ 'available' ] },
             { 'Name': 'tag:'+spoketag, 'Values': [ 'processing', 'unpeering' ] }
         ])
-        #logger.info('vpcs with tag:aviatrix-spoke is processing or unpeering: %s:' % str(vpcs))
+        #logger.info('vpcs with tag:spoketag is processing or unpeering: %s:' % str(vpcs))
         if vpcs['Vpcs']: # ucc is busy now
             logger.info('ucc is busy in adding/removing spoke of %s:' % str(vpcs['Vpcs']))
             return {
@@ -85,13 +85,13 @@ def handler(event, context):
                                  aws_access_key_id=other_credentials['Credentials']['AccessKeyId'],
                                  aws_secret_access_key=other_credentials['Credentials']['SecretAccessKey'],
                                  aws_session_token=other_credentials['Credentials']['SessionToken'] )
-                #Find VPCs with Tag:aviatrix-spoke = processing
-                #Create Gateway for it and Peer, when done change the Tag:aviatrix-spoke = peered
+                #Find VPCs with Tag:spoketag = processing
+                #Create Gateway for it and Peer, when done change the Tag:spoketag = peered
                 vpcs=ec2.describe_vpcs(Filters=[
                     { 'Name': 'state', 'Values': [ 'available' ] },
                     { 'Name': 'tag:'+spoketag, 'Values': [ 'processing', 'unpeering' ] }
                 ])
-                #logger.info('vpcs with tag:aviatrix-spoke is processing or unpeering: %s:' % str(vpcs))
+                #logger.info('vpcs with tag:spoketag is processing or unpeering: %s:' % str(vpcs))
                 if vpcs['Vpcs']: # ucc is busy now
                     logger.info('[Other Account] ucc is busy in adding/removing spoke of %s:' % str(vpcs['Vpcs']))
                     return {
@@ -102,8 +102,8 @@ def handler(event, context):
         region_id=region['RegionName']
         logger.info('Checking region: %s for VPC tagged %s' % (region_id,spoketag))
         ec2=boto3.client('ec2',region_name=region_id)
-        #Find VPCs with Tag:aviatrix-spoke = true
-        #Create Gateway for it and Peer, when done change the Tag:aviatrix-spoke = peered
+        #Find VPCs with Tag:spoketag = true
+        #Create Gateway for it and Peer, when done change the Tag:spoketag = peered
         vpcs=ec2.describe_vpcs(Filters=[
             { 'Name': 'state', 'Values': [ 'available' ] },
             { 'Name': 'tag:'+spoketag, 'Values': [ 'true', 'True', 'TRUE', 'test' ] }
@@ -174,8 +174,8 @@ def handler(event, context):
                                  aws_access_key_id=other_credentials['Credentials']['AccessKeyId'],
                                  aws_secret_access_key=other_credentials['Credentials']['SecretAccessKey'],
                                  aws_session_token=other_credentials['Credentials']['SessionToken'] )
-                #Find VPCs with Tag:aviatrix-spoke = true
-                #Create Gateway for it and Peer, when done change the Tag:aviatrix-spoke = peered
+                #Find VPCs with Tag:spoketag = true
+                #Create Gateway for it and Peer, when done change the Tag:spoketag = peered
                 vpcs=ec2.describe_vpcs(Filters=[
                     { 'Name': 'state', 'Values': [ 'available' ] },
                     { 'Name': 'tag:'+spoketag, 'Values': [ 'true', 'True', 'TRUE', 'test' ] }

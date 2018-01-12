@@ -60,9 +60,9 @@ logger.setLevel(logging.INFO)
 #Testing Data:
 # Destroying a t2.micro takes ~1 Min 30 seconds
 
-def tag_spoke(region_spoke,vpcid_spoke,tag):
+def tag_spoke(region_spoke,vpcid_spoke,spoketag, tag):
     ec2=boto3.client('ec2',region_name=region_spoke)
-    ec2.create_tags(Resources = [ vpcid_spoke ], Tags = [ { 'Key': 'aviatrix-spoke', 'Value': tag } ])
+    ec2.create_tags(Resources = [ vpcid_spoke ], Tags = [ { 'Key': spoketag, 'Value': tag } ])
 
 def find_other_spokes(vpc_pairs):
     ec2=boto3.client('ec2',region_name='us-east-1')
@@ -101,6 +101,7 @@ def handler(event, context):
     username = os.environ.get("Username")
     password = os.environ.get("Password")
     queue_url = os.environ.get("GatewayQueueURL")
+    spoketag = os.environ.get("SpokeTag")
     gatewaytopic = event['Records'][0]['EventSubscriptionArn'][:55]
     # Receive message from SQS queue
     #body=read_queue(queue_url)
@@ -189,8 +190,8 @@ def handler(event, context):
         except KeyError:
             awsaccount = "AWSAccount"
         #Processing
-        logger.info('Processing VPC %s. Updating tag:aviatrix-spoke to processing', vpcid_spoke)
-        tag_spoke(region_spoke,vpcid_spoke,'processing')
+        logger.info('Processing VPC %s. Updating tag:%s to processing' % (vpcid_spoke, spoketag)
+        tag_spoke(region_spoke,vpcid_spoke,spoketag,'processing')
         try:
             #Open connection to controller
             controller = Aviatrix(controller_ip)
@@ -298,8 +299,8 @@ def handler(event, context):
                 #for spoke in existing_spokes:
                     #controller.extended_vpc_peer(Args)
 
-            logger.info('Done Peering %s. Updating tag:aviatrix-spoke to peered', vpcid_spoke)
-            tag_spoke(region_spoke,vpcid_spoke,'peered')
+            logger.info('Done Peering %s. Updating tag:%s to peered' %  (vpcid_spoke, spoketag)
+            tag_spoke(region_spoke,vpcid_spoke,spoketag,'peered')
             return {
             'Status' : 'SUCCESS'
             }
@@ -317,8 +318,8 @@ def handler(event, context):
         vpcid_spoke = body['vpcid_spoke']
         subnet_spoke = body['subnet_spoke']
         #Processing
-        logger.info('Processing unpeer of VPC %s. Updating tag:aviatrix-spoke to processing', vpcid_spoke)
-        tag_spoke(region_spoke,vpcid_spoke,'processing')
+        logger.info('Processing unpeer of VPC %s. Updating tag:%s to processing' %  (vpcid_spoke,spoketag)
+        tag_spoke(region_spoke,vpcid_spoke,spoketag,'processing')
 
         try:
             #Open connection to controller
@@ -328,7 +329,7 @@ def handler(event, context):
             found_pairs = controller.results
             #Unpeering
             logger.info('UnPeering: hub-%s --> spoke-%s' % (vpcid_hub, vpcid_spoke))
-            tag_spoke(region_spoke,vpcid_spoke,'unpeering')
+            tag_spoke(region_spoke,vpcid_spoke,spoketag,'unpeering')
             controller.unpeering("hub-"+vpcid_hub, "spoke-"+vpcid_spoke)
             #get the list of existing Spokes
             controller.list_peers_vpc_pairs()
@@ -342,8 +343,8 @@ def handler(event, context):
             logger.info('Deleting Gateway: spoke-%s', vpcid_spoke)
             controller.delete_gateway("1", "spoke-"+vpcid_spoke)
 
-            logger.info('Done unPeering %s. Updating tag:aviatrix-spoke to unpeered', vpcid_spoke)
-            tag_spoke(region_spoke,vpcid_spoke,'unpeered')
+            logger.info('Done unPeering %s. Updating tag:%s to unpeered' % (vpcid_spoke,spoketag)
+            tag_spoke(region_spoke,vpcid_spoke,spoketag,'unpeered')
             return {
                 'Status' : 'SUCCESS'
             }

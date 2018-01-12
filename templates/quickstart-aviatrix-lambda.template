@@ -356,6 +356,9 @@
 						"SpokeGWSizeParam": {
 							"Ref": "SpokeGWSizeParam"
 						},
+						"SpokeTag": {
+							"Ref": "SpokeTag"
+						},
 						"GatewayQueue": {
 							"Fn::GetAtt": ["AviatrixGWQueue", "QueueName"]
 						},
