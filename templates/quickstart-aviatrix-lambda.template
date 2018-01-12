@@ -79,8 +79,23 @@
 		"SpokeTag" :{
 			"Type" : "String",
 			"Default" : "aviatrix-spoke",
-			"Description" : "Enter the tag to mark the Spokes. Default is aviatrix-spoke."
+			"Description" : "Tag to be used to identify spoke VPCs to connect to Transit VPC. Default is aviatrix-spoke."
 		},
+		"OtherAccount" : {
+       "Type" : "String",
+       "Default" : "",
+       "Description" : "(Optional) Enter the number of the secondary AWS account where spokes will be deployed."
+    },
+		"OtherAccountRoleApp" : {
+      "Type" : "String",
+      "Default" : "",
+      "Description" : "(Optional) Enter the ARN of secondary account where spokes will be deployed."
+    },
+		"OtherAccountRoleEC2" : {
+       "Type" : "String",
+       "Default" : "",
+       "Description" : "(Optional) Enter the ARN of the Aviatrix-role-ec2 on the secondary account where spokes will be deployed."
+    },
 		"LicenseModel" : {
 			"Description" : "Choose between BYOL or Utility License models.",
 			"Type" : "String",
@@ -130,7 +145,8 @@
 							"ec2:Describe*",
 							"ec2:CreateTags",
 							"SQS:*",
-							"SNS:*"
+							"SNS:*",
+							"STS:AssumeRole"
 						],
 						"Resource": "*"
 					}]
@@ -267,6 +283,15 @@
 						"GatewayTopic": {
 							"Ref": "AviatrixGWTopic"
 						},
+						"OtherAccount": {
+							"Ref": "OtherAccount"
+						},
+						"OtherAccountRoleApp": {
+							"Ref": "OtherAccountRoleApp"
+						},
+						"OtherAccountRoleEC2": {
+							"Ref": "OtherAccountRoleEC2"
+						},
 						"LicenseModel" : {
 							"Ref": "LicenseModel"
 						},
@@ -402,6 +427,9 @@
 						},
 						"SpokeTag": {
 							"Ref": "SpokeTag"
+						},
+						"OtherAccountRoleApp": {
+							"Ref": "OtherAccountRoleApp"
 						},
 						"GatewayTopic": {
 							"Ref": "AviatrixGWTopic"

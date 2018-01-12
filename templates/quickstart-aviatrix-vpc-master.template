@@ -12,7 +12,7 @@
         { "Label" : { "default" : "Controller Information" }, "Parameters" : [ "adminemailParam", "passwordParam", "ControllerSizeParam" ] },
         { "Label" : { "default" : "Licensing Configuration"}, "Parameters" : [ "LicenseModel", "License" ] },
         { "Label" : { "default" : "Gateway Information" }, "Parameters" : [ "HubGWSizeParam", "SpokeGWSizeParam", "SpokeTag"] },
-        { "Label" : { "default" : "IAM Roles Information" }, "Parameters" : [ "IAMRoleParam" ] }
+        { "Label" : { "default" : "IAM Roles Information" }, "Parameters" : [ "IAMRoleParam", "OtherAccount", "OtherAccountRoleApp", "OtherAccountRoleEC2"] }
       ],
       "ParameterLabels" :
       {
@@ -23,12 +23,15 @@
          "NewAZParamHA" : { "default": "Availability zone for HA"},
          "KeyNameParam" : { "default" : "Which keypair will be used?" },
          "adminemailParam" : { "default" : "Administrator email address?"},
-         "passwordParam" : { "default" : "Password for admin on Aviatrix Controller? (Complex Password)" },
+         "passwordParam" : { "default" : "Password for admin on Aviatrix Controller? " },
          "ControllerSizeParam" : { "default" : "Instance Size for the Aviatrix Controller?"},
          "HubGWSizeParam" : { "default" : "Instance Size for the Aviatrix Hub Gateway?" },
          "SpokeGWSizeParam" : { "default" : "Instance Size for the Aviatrix Spoke Gateways?" },
-         "SpokeTag" : { "default" : "Select the Tag that you want to use to mark the Spokes?" },
-         "IAMRoleParam" : { "default" : "Select \"Create New\" if Aviatrix IAM role has not been created yet, select aviatrix-role-ec2 if aviatrix-role-ec2  IAM role already exists"},
+         "SpokeTag" : { "default" : "Spoke VPC Tag Name" },
+         "IAMRoleParam" : { "default" : "Create IAM Role for primary account"},
+         "OtherAccount" : { "default" : "Second Account number"},
+         "OtherAccountRoleApp" : { "default" : "ARN for Aviatrix-role-app on secondary account"},
+         "OtherAccountRoleEC2" : { "default" : "ARN for aviatrix-role-ec2 on secondary account"},
          "LicenseModel" : { "default" : "Licensing Model?:"},
          "License" :  { "default" : "Enter your license key:"}
        }
@@ -73,7 +76,7 @@
     },
     "passwordParam": {
       "Type": "String",
-      "Description": "(Required) Password for the controller",
+      "Description": "(Required) Password for the controller. Please use a complex password.",
       "NoEcho": true
     },
     "ControllerSizeParam":
@@ -100,14 +103,29 @@
     "SpokeTag" :{
       "Type" : "String",
       "Default" : "aviatrix-spoke",
-      "Description" : "Enter the tag to mark the Spokes. Default is aviatrix-spoke."
+      "Description" : "Tag to be used to identify spoke VPCs to connect to Transit VPC. Default is aviatrix-spoke."
     },
     "IAMRoleParam" : {
-           "Description" : "Determine if IAM roles aviatrix-role-ec2 and aviatrix-role-app should be created.",
-           "Default" : "Create New",
-           "Type" : "String",
-           "AllowedValues" : ["aviatrix-role-ec2", "Create New"]
+      "Description" : "Select \"Create New\" if Aviatrix IAM role has not been created yet, select aviatrix-role-ec2 if aviatrix-role-ec2 IAM role already exists",
+      "Default" : "Create New",
+      "Type" : "String",
+       "AllowedValues" : ["aviatrix-role-ec2", "Create New"]
      },
+     "OtherAccount" : {
+        "Type" : "String",
+        "Default" : "",
+        "Description" : "(Optional) Enter the number of the secondary AWS account where spokes will be deployed."
+     },
+     "OtherAccountRoleApp" : {
+       "Type" : "String",
+       "Default" : "",
+       "Description" : "(Optional) Enter the ARN of the aviatrix-role-app on the secondary account where spokes will be deployed."
+    },
+    "OtherAccountRoleEC2" : {
+       "Type" : "String",
+       "Default" : "",
+       "Description" : "(Optional) Enter the ARN of the Aviatrix-role-ec2 on the secondary account where spokes will be deployed."
+    },
     "LicenseModel" : {
       "Description" : "Choose between BYOL or License Included - licensing models.",
       "Type" : "String",
@@ -275,6 +293,15 @@
               },
               "SpokeTag": {
                 "Ref": "SpokeTag"
+              },
+              "OtherAccount": {
+                "Ref": "OtherAccount"
+              },
+              "OtherAccountRoleApp": {
+                "Ref": "OtherAccountRoleApp"
+              },
+              "OtherAccountRoleEC2": {
+                "Ref": "OtherAccountRoleEC2"
               },
               "LicenseModel" : {
                 "Ref": "LicenseModel"

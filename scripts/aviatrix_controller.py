@@ -46,6 +46,9 @@ def create_handler(event,context):
     gatewaytopic = os.environ.get("GatewayTopic")
     licensemodel = os.environ.get("LicenseModel")
     license = os.environ.get("License")
+    otheraccount = os.environ.get("OtherAccount")
+    otheraccountroleapp = os.environ.get("OtherAccountRoleApp")
+    otheraccountroleec2 = os.environ.get("OtherAccountRoleEC2")
 
     #Start the Controller Initialization process
     try:
@@ -66,8 +69,12 @@ def create_handler(event,context):
     try:
         controller = Aviatrix(controller_ip)
         controller.login(username,password)
+        logger.info('Done with Initial Controller Setup')
         if licensemodel == "BYOL":
+            logger.info('Setting up License ')
             controller.setup_customer_id(license)
+            logger.info('Done with License Setup')
+        logger.info('Setting up AWS Account')
         controller.setup_account_profile("AWSAccount",
                                          password,
                                          admin_email,
@@ -75,6 +82,19 @@ def create_handler(event,context):
                                          account,
                                          aviatrixroleapp,
                                          aviatrixroleec2)
+        logger.info('Done with Setting up AWS account')
+        if otheraccountroleapp:
+            if otheraccountroleec2:
+                logger.info('Setting up AWS Other Account')
+                controller.setup_account_profile("AWSOtherAccount",
+                                                 password,
+                                                 admin_email,
+                                                 "1",
+                                                 otheraccount,
+                                                 otheraccountroleapp,
+                                                 otheraccountroleec2)
+                logger.info('Done with Setting up AWS account')
+
         logger.info('Done with Account creation')
     except URLError, e:
         logger.info('Failed request. Error: %s', controller.results)

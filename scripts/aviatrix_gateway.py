@@ -131,7 +131,7 @@ def handler(event, context):
                                       subnet_hub)
             #Send message to start HA gateway Deployment
             message = {}
-            message['action'] = 'deploygatewayha'
+            message['action'] = 'deployhubha'
             message['vpcid_ha'] = 'hub-' + vpcid_hub
             message['region_ha'] = region_hub
             message['subnet_ha'] = subnet_hubHA
@@ -144,7 +144,6 @@ def handler(event, context):
                 Message=json.dumps(message)
             )
             logger.info('Done with Hub Gateway Deployment')
-
             return {
                 'Status' : 'SUCCESS'
             }
@@ -154,8 +153,8 @@ def handler(event, context):
                 'Status' : 'FAILURE',
                 'Error' : controller.results
             }
-    #Case Deploy Gateway HA
-    elif body['action'] == 'deploygatewayha':
+    #Case Deploy Hub HA
+    elif body['action'] == 'deployhubha':
         #Variables for HA GW
         vpcid_ha = body['vpcid_ha']
         region_ha = body['region_ha']
@@ -172,22 +171,7 @@ def handler(event, context):
         controller.enable_vpc_ha(vpcid_ha,specific_subnet)
         logger.info('Created HA Gateway: %s', vpcid_ha)
         sleep(10)
-        #Call to create the peering And routing
-        message = {}
-        message['action'] = 'create_peering'
-        message['vpcid_ha'] = 'spoke-' + vpcid_spoke
-        message['region_ha'] = region_spoke
-        message['subnet_ha'] = subnet_spoke_ha
-        message['subnet_name'] = subnet_spoke_name
-        #Add New Gateway to SNS
-        sns = boto3.client('sns')
-        sns.publish(
-            TopicArn=gatewaytopic,
-            Subject='Create Peering and Routing for new GW',
-            Message=json.dumps(message)
-        )
-
-        logger.info('Done with HA Gateway Deployment')
+        logger.info('Done with HA Hub Gateway Deployment')
     #Case Deploy Gateway
     elif body['action'] == 'deploygateway':
         #Variables
@@ -199,6 +183,11 @@ def handler(event, context):
         gwsize_spoke = body['gwsize_spoke']
         vpcid_hub = body['vpcid_hub']
         vpc_cidr_spoke = body['vpc_cidr_spoke']
+        try:
+            otheraccount = body['otheraccount']
+            awsaccount = "AWSOtherAccount"
+        except KeyError:
+            awsaccount = "AWSAccount"
         #Processing
         logger.info('Processing VPC %s. Updating tag:aviatrix-spoke to processing', vpcid_spoke)
         tag_spoke(region_spoke,vpcid_spoke,'processing')
@@ -206,12 +195,9 @@ def handler(event, context):
             #Open connection to controller
             controller = Aviatrix(controller_ip)
             controller.login(username,password)
-            #get the list of existing Spokes
-            controller.list_peers_vpc_pairs()
-            found_pairs = controller.results
             #Spoke Gateway Creation
             logger.info('Creating Gateway: spoke-%s', vpcid_spoke)
-            controller.create_gateway("AWSAccount",
+            controller.create_gateway(awsaccount,
                                       "1",
                                       "spoke-"+vpcid_spoke,
                                       vpcid_spoke,
@@ -227,6 +213,10 @@ def handler(event, context):
             message['region_ha'] = region_spoke
             message['subnet_ha'] = subnet_spoke_ha
             message['subnet_name'] = subnet_spoke_name
+            message['vpcid_spoke'] = vpcid_spoke
+            message['vpcid_hub'] = vpcid_hub
+            message['vpc_cidr_spoke'] = vpc_cidr_spoke
+
             #Add New Gateway to SNS
             sns = boto3.client('sns')
             sns.publish(
@@ -240,38 +230,85 @@ def handler(event, context):
                 'Status' : 'FAILURE',
                 'Error' : controller.results
             }
+    #Case Deploy Gateway HA
+    elif body['action'] == 'deploygatewayha':
+        #Variables for HA GW
+        vpcid_ha = body['vpcid_ha']
+        region_ha = body['region_ha']
+        subnet_ha = body['subnet_ha']
+        subnet_name = body['subnet_name']
+        vpcid_spoke = body['vpcid_spoke']
+        vpcid_hub = body['vpcid_hub']
+        vpc_cidr_spoke = body['vpc_cidr_spoke']
+        specific_subnet = subnet_ha + "~~" + region_ha + "~~" + subnet_name
+        #Processing
+        logger.info('Processing HA Gateway %s.', vpcid_ha)
+        #Open connection to controller
+        controller = Aviatrix(controller_ip)
+        controller.login(username,password)
+        #HA Gateway Creation
+        logger.info('Creating HA Gateway: %s', vpcid_ha)
+        controller.enable_vpc_ha(vpcid_ha,specific_subnet)
+        logger.info('Created HA Gateway: %s', vpcid_ha)
+        sleep(10)
+        #Call to create the peering And routing
+        message = {}
+        message['action'] = 'create_peering'
+        message['vpcid_ha'] = 'spoke-' + vpcid_spoke
+        message['region_spoke'] = region_ha
+        message['vpcid_spoke'] = vpcid_spoke
+        message['vpcid_hub'] = vpcid_hub
+        message['vpc_cidr_spoke'] = vpc_cidr_spoke
+        #Add New Gateway to SNS
+        sns = boto3.client('sns')
+        sns.publish(
+            TopicArn=gatewaytopic,
+            Subject='Create Peering and Routing for new GW',
+            Message=json.dumps(message)
+        )
+
+        logger.info('Done with HA Gateway Deployment')
     #Case Deploy peering
     elif body['action'] == 'create_peering':
         #Variables
-        subnet_spoke = body['subnet_spoke']
-        subnet_spoke_ha = body['subnet_spoke_ha']
-        subnet_spoke_name = body['subnet_spoke_name']
         vpcid_spoke = body['vpcid_spoke']
         region_spoke = body['region_spoke']
-        gwsize_spoke = body['gwsize_spoke']
         vpcid_hub = body['vpcid_hub']
         vpc_cidr_spoke = body['vpc_cidr_spoke']
-        #Peering Hub/Spoke
-        logger.info('Peering: hub-%s --> spoke-%s' % (vpcid_hub, vpcid_spoke))
-        controller.peering("hub-"+vpcid_hub, "spoke-"+vpcid_spoke)
-        #Creating the transitive connections
-        existing_spokes = find_other_spokes(found_pairs)
-        logger.info('Creating Transitive routes, Data: %s' % existing_spokes)
-        if existing_spokes:
-            for existing_spoke in existing_spokes:
-                controller.add_extended_vpc_peer('spoke-' + vpcid_spoke, 'hub-' + vpcid_hub, existing_spoke['subnet'])
-                controller.add_extended_vpc_peer(existing_spoke['vpc_name'],'hub-' + vpcid_hub, vpc_cidr_spoke)
-        logger.info('Finished creating Transitive routes')
-        #if len(existing_spokes) != 0:
-            #Create transitive routes for each spoke
-            #for spoke in existing_spokes:
-                #controller.extended_vpc_peer(Args)
+        try:
+            #Open connection to controller
+            controller = Aviatrix(controller_ip)
+            controller.login(username,password)
+            #Peering Hub/Spoke
+            logger.info('Peering: hub-%s --> spoke-%s' % (vpcid_hub, vpcid_spoke))
+            controller.peering("hub-"+vpcid_hub, "spoke-"+vpcid_spoke)
+            #get the list of existing Spokes
+            controller.list_peers_vpc_pairs()
+            found_pairs = controller.results
+            #Creating the transitive connections
+            existing_spokes = find_other_spokes(found_pairs)
+            logger.info('Creating Transitive routes, Data: %s' % existing_spokes)
+            if existing_spokes:
+                for existing_spoke in existing_spokes:
+                    controller.add_extended_vpc_peer('spoke-' + vpcid_spoke, 'hub-' + vpcid_hub, existing_spoke['subnet'])
+                    controller.add_extended_vpc_peer(existing_spoke['vpc_name'],'hub-' + vpcid_hub, vpc_cidr_spoke)
+            logger.info('Finished creating Transitive routes')
+            #if len(existing_spokes) != 0:
+                #Create transitive routes for each spoke
+                #for spoke in existing_spokes:
+                    #controller.extended_vpc_peer(Args)
 
-        logger.info('Done Peering %s. Updating tag:aviatrix-spoke to peered', vpcid_spoke)
-        tag_spoke(region_spoke,vpcid_spoke,'peered')
-        return {
-        'Status' : 'SUCCESS'
-        }
+            logger.info('Done Peering %s. Updating tag:aviatrix-spoke to peered', vpcid_spoke)
+            tag_spoke(region_spoke,vpcid_spoke,'peered')
+            return {
+            'Status' : 'SUCCESS'
+            }
+        except URLError, e:
+            logger.info('Failed request. Error: %s', controller.results)
+            return {
+                'Status' : 'FAILURE',
+                'Error' : controller.results
+            }
     #Case Delete Gateway
     elif body['action'] == 'deletegateway':
         #Variables
