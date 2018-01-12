@@ -2,6 +2,11 @@
 - hosts: localhost
   connection: local
   tasks:
+  - name: Check if the files compile
+    shell: python ../scripts/compile-test.py
+    register: compile_output
+  - debug:
+      var: compile_output
   - name: Create aviatrix_controller.py.zip package
     archive:
       path:
