@@ -5,7 +5,7 @@ phases:
       - echo Entered the install phase...
       - echo Installing Pre-requisites
       - apt-get update
-      - apt-get install curl
+      - apt-get install -y curl
       - echo Installing taskcat
       - curl -s https://raw.githubusercontent.com/aws-quickstart/taskcat/master/installer/docker-install-master| sudo python -E
   build:
