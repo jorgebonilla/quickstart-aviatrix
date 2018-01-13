@@ -12,7 +12,7 @@
         { "Label" : { "default" : "Controller Information" }, "Parameters" : [ "adminemailParam", "passwordParam", "ControllerSizeParam" ] },
         { "Label" : { "default" : "Licensing Configuration"}, "Parameters" : [ "LicenseModel", "License" ] },
         { "Label" : { "default" : "Gateway Information" }, "Parameters" : [ "HubGWSizeParam", "SpokeGWSizeParam", "SpokeTag"] },
-        { "Label" : { "default" : "IAM Roles Information" }, "Parameters" : [ "IAMRoleParam", "OtherAccount", "OtherAccountRoleApp", "OtherAccountRoleEC2"] }
+        { "Label" : { "default" : "IAM Roles Information" }, "Parameters" : [ "OtherAccount", "OtherAccountRoleApp", "OtherAccountRoleEC2"] }
       ],
       "ParameterLabels" :
       {
@@ -28,7 +28,6 @@
          "HubGWSizeParam" : { "default" : "Instance Size for the Aviatrix Hub Gateway?" },
          "SpokeGWSizeParam" : { "default" : "Instance Size for the Aviatrix Spoke Gateways?" },
          "SpokeTag" : { "default" : "Spoke VPC Tag Name" },
-         "IAMRoleParam" : { "default" : "Create IAM Role for primary account"},
          "OtherAccount" : { "default" : "Second Account number"},
          "OtherAccountRoleApp" : { "default" : "ARN for Aviatrix-role-app on secondary account"},
          "OtherAccountRoleEC2" : { "default" : "ARN for aviatrix-role-ec2 on secondary account"},
@@ -98,12 +97,6 @@
       "Default" : "aviatrix-spoke",
       "Description" : "Tag to be used to identify spoke VPCs to connect to Transit VPC. Default is aviatrix-spoke."
     },
-    "IAMRoleParam" : {
-      "Description" : "Select \"Create New\" if Aviatrix IAM role has not been created yet, select aviatrix-role-ec2 if aviatrix-role-ec2 IAM role already exists",
-      "Default" : "Create New",
-      "Type" : "String",
-      "AllowedValues" : ["aviatrix-role-ec2", "Create New"]
-    },
     "OtherAccount" : {
        "Type" : "String",
        "Default" : "",
@@ -131,14 +124,12 @@
     }
   },
   "Conditions" : {
-    "CreateIAMRoles" : { "Fn::Equals": [ { "Ref": "IAMRoleParam" }, "Create New" ]},
     "NotBlankLicense" : { "Fn::Not" : [ { "Fn::Equals": [ { "Ref": "License" }, "" ] } ] }
   },
   "Resources" :
   {
     "AVXIAMRolesStack": {
       "Type": "AWS::CloudFormation::Stack",
-      "Condition" : "CreateIAMRoles",
       "Properties": {
           "TemplateURL": {
               "Fn::Sub": "https://s3.amazonaws.com/quickstart-aviatrix-us-east-1/templates/quickstart-aviatrix-iamroles.template"
