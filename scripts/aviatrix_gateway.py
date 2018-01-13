@@ -190,7 +190,7 @@ def handler(event, context):
         except KeyError:
             awsaccount = "AWSAccount"
         #Processing
-        logger.info('Processing VPC %s. Updating tag:%s to processing' % (vpcid_spoke, spoketag)
+        logger.info('Processing VPC %s. Updating tag:%s to processing' % (vpcid_spoke, spoketag))
         tag_spoke(region_spoke,vpcid_spoke,spoketag,'processing')
         try:
             #Open connection to controller
@@ -299,7 +299,7 @@ def handler(event, context):
                 #for spoke in existing_spokes:
                     #controller.extended_vpc_peer(Args)
 
-            logger.info('Done Peering %s. Updating tag:%s to peered' %  (vpcid_spoke, spoketag)
+            logger.info('Done Peering %s. Updating tag:%s to peered' %  (vpcid_spoke, spoketag))
             tag_spoke(region_spoke,vpcid_spoke,spoketag,'peered')
             return {
             'Status' : 'SUCCESS'
@@ -318,7 +318,7 @@ def handler(event, context):
         vpcid_spoke = body['vpcid_spoke']
         subnet_spoke = body['subnet_spoke']
         #Processing
-        logger.info('Processing unpeer of VPC %s. Updating tag:%s to processing' %  (vpcid_spoke,spoketag)
+        logger.info('Processing unpeer of VPC %s. Updating tag:%s to processing' %  (vpcid_spoke,spoketag))
         tag_spoke(region_spoke,vpcid_spoke,spoketag,'processing')
 
         try:
@@ -343,7 +343,7 @@ def handler(event, context):
             logger.info('Deleting Gateway: spoke-%s', vpcid_spoke)
             controller.delete_gateway("1", "spoke-"+vpcid_spoke)
 
-            logger.info('Done unPeering %s. Updating tag:%s to unpeered' % (vpcid_spoke,spoketag)
+            logger.info('Done unPeering %s. Updating tag:%s to unpeered' % (vpcid_spoke,spoketag))
             tag_spoke(region_spoke,vpcid_spoke,spoketag,'unpeered')
             return {
                 'Status' : 'SUCCESS'
