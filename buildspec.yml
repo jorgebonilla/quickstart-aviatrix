@@ -24,8 +24,4 @@ phases:
       - zip scripts/aviatrix_poller.py.zip scripts/aviatrix_poller.py
 artifacts:
   files:
-    - scripts/aviatrix_controller.py.zip
-  files:
-    - scripts/aviatrix_gateway.py.zip
-  files:
-    - scripts/aviatrix_poller.py.zip
+    - scripts/*.py.zip
