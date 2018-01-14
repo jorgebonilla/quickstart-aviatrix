@@ -359,6 +359,9 @@
 						"SpokeTag": {
 							"Ref": "SpokeTag"
 						},
+						"OtherAccountRoleApp": {
+							"Ref": "OtherAccountRoleApp"
+						},
 						"GatewayQueue": {
 							"Fn::GetAtt": ["AviatrixGWQueue", "QueueName"]
 						},

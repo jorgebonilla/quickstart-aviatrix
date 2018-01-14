@@ -60,15 +60,12 @@ logger.setLevel(logging.INFO)
 #Testing Data:
 # Destroying a t2.micro takes ~1 Min 30 seconds
 
-def tag_spoke(region_spoke,vpcid_spoke,spoketag, tag):
-    ec2=boto3.client('ec2',region_name=region_spoke)
+def tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag, tag):
     ec2.create_tags(Resources = [ vpcid_spoke ], Tags = [ { 'Key': spoketag, 'Value': tag } ])
 
-def find_other_spokes(vpc_pairs):
-    ec2=boto3.client('ec2',region_name='us-east-1')
+def find_other_spokes(ec2,vpc_pairs,existing_spokes):
     regions=ec2.describe_regions()
     if vpc_pairs:
-        existing_spokes=[]
         vpc_name_temp = {}
         for region in regions['Regions']:
             region_id=region['RegionName']
@@ -95,6 +92,13 @@ def test_find_other_spokes():
                     }
     assert find_other_spokes(test_vpc_pairs) == [{'subnet': '172.31.0.0/16', 'vpc_name': 'spoke-vpc-7a169913'}]
 
+def get_credentials(rolearn):
+    session = boto3.session.Session()
+    client = session.client('sts')
+    assume_role_response = client.assume_role(RoleArn=rolearn,
+                                              RoleSessionName="aviatrix_poller" )
+    return assume_role_response
+
 def handler(event, context):
     #Read environment Variables
     controller_ip = os.environ.get("Controller_IP")
@@ -103,6 +107,7 @@ def handler(event, context):
     queue_url = os.environ.get("GatewayQueueURL")
     spoketag = os.environ.get("SpokeTag")
     gatewaytopic = event['Records'][0]['EventSubscriptionArn'][:55]
+    OtherAccountRoleApp = os.environ.get("OtherAccountRoleApp")
     # Receive message from SQS queue
     #body=read_queue(queue_url)
     logger.info('Received Message: %s', event)
@@ -187,11 +192,19 @@ def handler(event, context):
         try:
             otheraccount = body['otheraccount']
             awsaccount = "AWSOtherAccount"
+            other_credentials = get_credentials(OtherAccountRoleApp)
+            region_id=region_spoke
+            ec2=boto3.client('ec2',
+                             region_name=region_id,
+                             aws_access_key_id=other_credentials['Credentials']['AccessKeyId'],
+                             aws_secret_access_key=other_credentials['Credentials']['SecretAccessKey'],
+                             aws_session_token=other_credentials['Credentials']['SessionToken'] )
         except KeyError:
             awsaccount = "AWSAccount"
+            ec2=boto3.client('ec2',region_name=region_spoke)
         #Processing
         logger.info('Processing VPC %s. Updating tag:%s to processing' % (vpcid_spoke, spoketag))
-        tag_spoke(region_spoke,vpcid_spoke,spoketag,'processing')
+        tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'processing')
         try:
             #Open connection to controller
             controller = Aviatrix(controller_ip)
@@ -277,6 +290,19 @@ def handler(event, context):
         vpcid_hub = body['vpcid_hub']
         vpc_cidr_spoke = body['vpc_cidr_spoke']
         try:
+            otheraccount = body['otheraccount']
+            awsaccount = "AWSOtherAccount"
+            other_credentials = get_credentials(OtherAccountRoleApp)
+            region_id=region_spoke
+            ec2=boto3.client('ec2',
+                             region_name=region_id,
+                             aws_access_key_id=other_credentials['Credentials']['AccessKeyId'],
+                             aws_secret_access_key=other_credentials['Credentials']['SecretAccessKey'],
+                             aws_session_token=other_credentials['Credentials']['SessionToken'] )
+        except KeyError:
+            awsaccount = "AWSAccount"
+            ec2=boto3.client('ec2',region_name=region_spoke)
+        try:
             #Open connection to controller
             controller = Aviatrix(controller_ip)
             controller.login(username,password)
@@ -286,13 +312,19 @@ def handler(event, context):
             #get the list of existing Spokes
             controller.list_peers_vpc_pairs()
             found_pairs = controller.results
+            #Find the CIDRs of existing peerings on Primary/Secondary Account
+            existing_spokes = find_other_spokes(ec2,found_pairs,[])
+            #Find the CIDRs of existing peerings on Primary Account (in case current spoke is secondary)
+            if awsaccount == "AWSOtherAccount":
+                ec2_primary=boto3.client('ec2',region_name=region_spoke)
+                existing_spokes = find_other_spokes(ec2_primary,found_pairs,existing_spokes)
             #Creating the transitive connections
-            existing_spokes = find_other_spokes(found_pairs)
             logger.info('Creating Transitive routes, Data: %s' % existing_spokes)
             if existing_spokes:
                 for existing_spoke in existing_spokes:
-                    controller.add_extended_vpc_peer('spoke-' + vpcid_spoke, 'hub-' + vpcid_hub, existing_spoke['subnet'])
-                    controller.add_extended_vpc_peer(existing_spoke['vpc_name'],'hub-' + vpcid_hub, vpc_cidr_spoke)
+                    if existing_spoke['vpc_name'] != 'spoke-' + vpcid_spoke:
+                        controller.add_extended_vpc_peer('spoke-' + vpcid_spoke, 'hub-' + vpcid_hub, existing_spoke['subnet'])
+                        controller.add_extended_vpc_peer(existing_spoke['vpc_name'],'hub-' + vpcid_hub, vpc_cidr_spoke)
             logger.info('Finished creating Transitive routes')
             #if len(existing_spokes) != 0:
                 #Create transitive routes for each spoke
@@ -300,7 +332,7 @@ def handler(event, context):
                     #controller.extended_vpc_peer(Args)
 
             logger.info('Done Peering %s. Updating tag:%s to peered' %  (vpcid_spoke, spoketag))
-            tag_spoke(region_spoke,vpcid_spoke,spoketag,'peered')
+            tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'peered')
             return {
             'Status' : 'SUCCESS'
             }
@@ -317,34 +349,52 @@ def handler(event, context):
         vpcid_hub = body['vpcid_hub']
         vpcid_spoke = body['vpcid_spoke']
         subnet_spoke = body['subnet_spoke']
+        try:
+            otheraccount = body['otheraccount']
+            awsaccount = "AWSOtherAccount"
+            other_credentials = get_credentials(OtherAccountRoleApp)
+            region_id=region_spoke
+            ec2=boto3.client('ec2',
+                             region_name=region_id,
+                             aws_access_key_id=other_credentials['Credentials']['AccessKeyId'],
+                             aws_secret_access_key=other_credentials['Credentials']['SecretAccessKey'],
+                             aws_session_token=other_credentials['Credentials']['SessionToken'] )
+        except KeyError:
+            awsaccount = "AWSAccount"
+            ec2=boto3.client('ec2',region_name=region_spoke)
         #Processing
         logger.info('Processing unpeer of VPC %s. Updating tag:%s to processing' %  (vpcid_spoke,spoketag))
-        tag_spoke(region_spoke,vpcid_spoke,spoketag,'processing')
-
+        tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'processing')
         try:
             #Open connection to controller
             controller = Aviatrix(controller_ip)
             controller.login(username,password)
-            controller.list_peers_vpc_pairs()
-            found_pairs = controller.results
             #Unpeering
             logger.info('UnPeering: hub-%s --> spoke-%s' % (vpcid_hub, vpcid_spoke))
-            tag_spoke(region_spoke,vpcid_spoke,spoketag,'unpeering')
+            tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'unpeering')
             controller.unpeering("hub-"+vpcid_hub, "spoke-"+vpcid_spoke)
+
             #get the list of existing Spokes
             controller.list_peers_vpc_pairs()
-            existing_spokes = find_other_spokes(found_pairs)
-            #Delete Transitive routers
+            found_pairs = controller.results
+            #Find the CIDRs of existing peerings on Primary/Secondary Account
+            existing_spokes = find_other_spokes(ec2,found_pairs,[])
+            #Find the CIDRs of existing peerings on Primary Account (in case current spoke is secondary)
+            if awsaccount == "AWSOtherAccount":
+                ec2_primary=boto3.client('ec2',region_name=region_spoke)
+                existing_spokes = find_other_spokes(ec2_primary,found_pairs,existing_spokes)
+            #Delete Transitive routes
             if existing_spokes:
                 for existing_spoke in existing_spokes:
-                    controller.delete_extended_vpc_peer('spoke-' + vpcid_spoke, 'hub-' + vpcid_hub, existing_spoke['subnet'])
-                    controller.delete_extended_vpc_peer(existing_spoke['vpc_name'],'hub-' + vpcid_hub, subnet_spoke)
+                    if existing_spoke['vpc_name'] != 'spoke-' + vpcid_spoke:
+                        controller.delete_extended_vpc_peer('spoke-' + vpcid_spoke, 'hub-' + vpcid_hub, existing_spoke['subnet'])
+                        controller.delete_extended_vpc_peer(existing_spoke['vpc_name'],'hub-' + vpcid_hub, subnet_spoke)
             #Spoke Gateway Delete
             logger.info('Deleting Gateway: spoke-%s', vpcid_spoke)
             controller.delete_gateway("1", "spoke-"+vpcid_spoke)
 
             logger.info('Done unPeering %s. Updating tag:%s to unpeered' % (vpcid_spoke,spoketag))
-            tag_spoke(region_spoke,vpcid_spoke,spoketag,'unpeered')
+            tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'unpeered')
             return {
                 'Status' : 'SUCCESS'
             }

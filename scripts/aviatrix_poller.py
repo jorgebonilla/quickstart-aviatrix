@@ -7,8 +7,7 @@ lambda_client = boto3.client('lambda')
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-def find_subnets(region_id,vpc_id):
-    ec2=boto3.client('ec2',region_name=region_id)
+def find_subnets(ec2,region_id,vpc_id):
     subnets_with_igw=ec2.describe_route_tables(Filters=[
         { 'Name': 'vpc-id', 'Values':[ vpc_id ]},
         { 'Name': 'route.gateway-id', 'Values': [ 'igw-*' ] }
@@ -117,7 +116,10 @@ def handler(event, context):
             message['vpcid_hub'] = vpcid_hub
             #Finding the Public Subnet
             try:
-                subnets=find_subnets(message['region_spoke'],message['vpcid_spoke'])
+
+                subnets=find_subnets(ec2, message['region_spoke'],message['vpcid_spoke'])
+                if subnets:
+                    logger.warning('Subnets found: %s ' % (subnets))
                 message['subnet_spoke'] = subnets[0]['CidrBlock']
                 message['subnet_spoke_ha'] = subnets[1]['CidrBlock']
                 message['subnet_spoke_name'] = subnets[1]['Name']
@@ -191,7 +193,9 @@ def handler(event, context):
 
                     #Finding the Public Subnet
                     try:
-                        subnets=find_subnets(message['region_spoke'],message['vpcid_spoke'])
+                        subnets=find_subnets(ec2,message['region_spoke'],message['vpcid_spoke'])
+                        if subnets:
+                            logger.warning('Subnets found: %s ' % (subnets))
                         message['subnet_spoke'] = subnets[0]['CidrBlock']
                         message['subnet_spoke_ha'] = subnets[1]['CidrBlock']
                         message['subnet_spoke_name'] = subnets[1]['Name']
