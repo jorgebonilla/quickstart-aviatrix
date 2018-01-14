@@ -24,4 +24,5 @@ phases:
       - zip scripts/aviatrix_poller.py.zip scripts/aviatrix_poller.py
 artifacts:
   files:
-    - scripts/*.py.zip
+    - scripts/aviatrix_*.py.zip
+  discard-paths: yes
