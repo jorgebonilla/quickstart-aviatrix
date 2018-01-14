@@ -8,12 +8,9 @@ phases:
     commands:
       - echo Entering the build phase
       - echo Testing the scripts
-      - ls -lah
-      - cd ./scripts
-      - ls -lah
       - echo Compilation Tests
-      - python -m py_compile aviatrix_poller.py
-      - python -m py_compile aviatrix_controller.py
-      - python -m py_compile aviatrix_gateway.py
+      - python -m py_compile scripts/aviatrix_poller.py
+      - python -m py_compile scripts/aviatrix_controller.py
+      - python -m py_compile scripts/aviatrix_gateway.py
       - echo Unittest
-      - python -m unittest test_aviatrix_poller
+      - python -m unittest scripts/test_aviatrix_poller
