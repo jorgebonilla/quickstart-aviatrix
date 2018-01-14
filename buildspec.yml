@@ -8,7 +8,8 @@ phases:
     commands:
       - echo Entering the build phase
       - echo Testing the scripts
-      - cd scripts
+      - ls -lah
+      - cd ./scripts
       - ls -lah
       - echo Compilation Tests
       - python -m py_compile aviatrix_poller.py
