@@ -3,12 +3,8 @@ phases:
   install:
     commands:
       - echo Entered the install phase...
-      - echo Installing Pre-requisites
-      - apt-get update
-      - apt-get install -y curl
-      - echo Installing taskcat
-      - curl -s https://raw.githubusercontent.com/aws-quickstart/taskcat/master/installer/docker-install-master| sudo python -E
   build:
     commands:
       - echo Entering the build phase
-      - taskcat -c ci/config.yml
+      - echo Testing the scripts
+      - python -m unittest scripts/test_aviatrix_poller
