@@ -11,6 +11,5 @@ class Aviatrix_Poller_Test(unittest.TestCase):
         self.assertEquals(subnet['SubnetId'][:6],'subnet')
         self.assertEquals(subnet['Name'][:8],'Unittest')
 
-
 if __name__ == '__main__':
   unittest.main()

@@ -12,5 +12,5 @@ phases:
       - python -m py_compile scripts/aviatrix_poller.py
       - python -m py_compile scripts/aviatrix_controller.py
       - python -m py_compile scripts/aviatrix_gateway.py
-      - echo Unittest
-      - python -m unittest scripts/test_aviatrix_poller
+      - echo Run Unittest
+      - python -m unittest discover scripts
