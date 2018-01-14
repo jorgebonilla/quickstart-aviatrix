@@ -7,4 +7,5 @@ phases:
     commands:
       - echo Entering the build phase
       - echo Testing the scripts
-      - python -m unittest scripts/test_aviatrix_poller
+      - cd scripts
+      - python -m unittest test_aviatrix_poller
