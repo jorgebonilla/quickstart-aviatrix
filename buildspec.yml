@@ -25,5 +25,7 @@ phases:
 artifacts:
   files:
     - scripts/aviatrix_controller.py.zip
-    - aviatrix_gateway.py.zip
-    - aviatrix_poller.py.zip 
+  files:
+    - scripts/aviatrix_gateway.py.zip
+  files:
+    - scripts/aviatrix_poller.py.zip 
