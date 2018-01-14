@@ -20,12 +20,12 @@ phases:
     commands:
       - echo Entering the post_build phase...
       - zip scripts/aviatrix_controller.py.zip scripts/aviatrix_controller.py scripts/aviatrix.py scripts/cfn_resource.py scripts/cfnresponse.py
-      - zip aviatrix_gateway.py.zip scripts/aviatrix_gateway.py scripts/aviatrix.py
-      - zip aviatrix_poller.py.zip scripts/aviatrix_poller.py
+      - zip scripts/aviatrix_gateway.py.zip scripts/aviatrix_gateway.py scripts/aviatrix.py
+      - zip scripts/aviatrix_poller.py.zip scripts/aviatrix_poller.py
 artifacts:
   files:
     - scripts/aviatrix_controller.py.zip
   files:
     - scripts/aviatrix_gateway.py.zip
   files:
-    - scripts/aviatrix_poller.py.zip 
+    - scripts/aviatrix_poller.py.zip
