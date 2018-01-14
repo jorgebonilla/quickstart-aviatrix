@@ -449,14 +449,14 @@
 		"AviatrixPollerEvent": {
 			"Type": "AWS::Events::Rule",
 			"Properties": {
-				"Description": "Rule to trigger AviatrixPoller every 1 minutes to find VPCs that need to be attached to the Transit Hub VPC.",
-				"ScheduleExpression": "cron(* * * * ? *)",
+				"Description": "Rule to trigger AviatrixPoller every 2 minutes to find VPCs that need to be attached to the Transit Hub VPC.",
+				"ScheduleExpression": "cron(/2 * * * ? *)",
 				"State": "ENABLED",
 				"Targets": [{
 					"Id": {
 						"Fn::Join": ["-", [{
 							"Ref": "AWS::StackName"
-						}, "Poller-1min"]]
+						}, "Poller-2min"]]
 					},
 					"Arn": {
 						"Fn::GetAtt": ["AviatrixPollerLambda", "Arn"]
