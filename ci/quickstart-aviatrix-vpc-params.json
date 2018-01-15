@@ -10,5 +10,13 @@
     {
         "ParameterKey": "NewSubnetParamHA",
         "ParameterValue": "10.1.1.0/24"
+    },
+    {
+        "ParameterKey": "NewAZParam",
+        "ParameterValue": "$[taskcat_genaz_1]"
+    },
+    {
+        "ParameterKey": "NewAZParamHA",
+        "ParameterValue": "$[taskcat_genaz_1]"
     }
 ]
