@@ -326,12 +326,22 @@ def handler(event, context):
                         controller.add_extended_vpc_peer('spoke-' + vpcid_spoke, 'hub-' + vpcid_hub, existing_spoke['subnet'])
                         controller.add_extended_vpc_peer(existing_spoke['vpc_name'],'hub-' + vpcid_hub, vpc_cidr_spoke)
             logger.info('Finished creating Transitive routes')
-            #if len(existing_spokes) != 0:
-                #Create transitive routes for each spoke
-                #for spoke in existing_spokes:
-                    #controller.extended_vpc_peer(Args)
 
             logger.info('Done Peering %s. Updating tag:%s to peered' %  (vpcid_spoke, spoketag))
+            #reconnect to right Account:
+            try:
+                otheraccount = body['otheraccount']
+                awsaccount = "AWSOtherAccount"
+                other_credentials = get_credentials(OtherAccountRoleApp)
+                region_id=region_spoke
+                ec2=boto3.client('ec2',
+                                 region_name=region_id,
+                                 aws_access_key_id=other_credentials['Credentials']['AccessKeyId'],
+                                 aws_secret_access_key=other_credentials['Credentials']['SecretAccessKey'],
+                                 aws_session_token=other_credentials['Credentials']['SessionToken'] )
+            except KeyError:
+                awsaccount = "AWSAccount"
+                ec2=boto3.client('ec2',region_name=region_spoke)
             tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'peered')
             return {
             'Status' : 'SUCCESS'
@@ -369,10 +379,6 @@ def handler(event, context):
             #Open connection to controller
             controller = Aviatrix(controller_ip)
             controller.login(username,password)
-            #Unpeering
-            logger.info('UnPeering: hub-%s --> spoke-%s' % (vpcid_hub, vpcid_spoke))
-            tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'unpeering')
-            controller.unpeering("hub-"+vpcid_hub, "spoke-"+vpcid_spoke)
 
             #get the list of existing Spokes
             controller.list_peers_vpc_pairs()
@@ -389,10 +395,29 @@ def handler(event, context):
                     if existing_spoke['vpc_name'] != 'spoke-' + vpcid_spoke:
                         controller.delete_extended_vpc_peer('spoke-' + vpcid_spoke, 'hub-' + vpcid_hub, existing_spoke['subnet'])
                         controller.delete_extended_vpc_peer(existing_spoke['vpc_name'],'hub-' + vpcid_hub, subnet_spoke)
+
+
+            #Reconnect with right account:
+            try:
+                otheraccount = body['otheraccount']
+                awsaccount = "AWSOtherAccount"
+                other_credentials = get_credentials(OtherAccountRoleApp)
+                region_id=region_spoke
+                ec2=boto3.client('ec2',
+                                 region_name=region_id,
+                                 aws_access_key_id=other_credentials['Credentials']['AccessKeyId'],
+                                 aws_secret_access_key=other_credentials['Credentials']['SecretAccessKey'],
+                                 aws_session_token=other_credentials['Credentials']['SessionToken'] )
+            except KeyError:
+                awsaccount = "AWSAccount"
+                ec2=boto3.client('ec2',region_name=region_spoke)
+            #Unpeering
+            logger.info('UnPeering: hub-%s --> spoke-%s' % (vpcid_hub, vpcid_spoke))
+            tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'unpeering')
+            controller.unpeering("hub-"+vpcid_hub, "spoke-"+vpcid_spoke)
             #Spoke Gateway Delete
             logger.info('Deleting Gateway: spoke-%s', vpcid_spoke)
             controller.delete_gateway("1", "spoke-"+vpcid_spoke)
-
             logger.info('Done unPeering %s. Updating tag:%s to unpeered' % (vpcid_spoke,spoketag))
             tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'unpeered')
             return {
