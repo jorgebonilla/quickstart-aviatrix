@@ -66,11 +66,11 @@ def tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag, tag):
 def find_other_spokes(ec2,vpc_pairs,existing_spokes):
     regions=ec2.describe_regions()
     if vpc_pairs:
-        vpc_name_temp = {}
         for region in regions['Regions']:
             region_id=region['RegionName']
             ec2=boto3.client('ec2',region_name=region_id)
             for vpc_name in vpc_pairs['pair_list']:
+                vpc_name_temp = {}
                 vpc_name_temp['vpc_name'] = vpc_name['vpc_name2']
                 vpc_info=ec2.describe_vpcs(Filters=[
                     { 'Name': 'vpc-id', 'Values':[ vpc_name['vpc_name2'][6:] ]}
