@@ -10,7 +10,7 @@ phases:
     commands:
       - echo Entering the build phase...
       - echo Running taskcat
-      - taskcat -c ci/config.yml
+      - taskcat -c quickstart-aviatrix/ci/config.yml
   post_build:
     commands:
       - echo Entering the post_build phase...
