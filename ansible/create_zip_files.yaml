@@ -12,7 +12,6 @@
       path:
           - ../scripts/aviatrix_controller.py
           - ../scripts/aviatrix.py
-          - ../scripts/cfn_resource.py
           - ../scripts/cfnresponse.py
       dest: ./build/aviatrix_controller.py.zip
       format: zip
