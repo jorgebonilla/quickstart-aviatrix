@@ -28,6 +28,6 @@ phases:
       - zip -j quickstart-aviatrix/scripts/aviatrix_poller.py.zip quickstart-aviatrix/scripts/aviatrix_poller.py
 artifacts:
   files:
-    - quickstart-aviatrix/scripts/aviatrix_*.py.zip
-    - quickstart-aviatrix/templates/quickstart-aviatrix-*.template
-  discard-paths: yes
+    - scripts/aviatrix_*.py.zip
+    - templates/quickstart-aviatrix-*.template
+  base-directory: quickstart-aviatrix
