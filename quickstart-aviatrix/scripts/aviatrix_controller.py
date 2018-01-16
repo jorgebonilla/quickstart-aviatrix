@@ -59,7 +59,7 @@ def create_handler(event,context):
         controller.login(username,password)
         controller.initial_setup("run")
         logger.info('Done with Initial Controller Setup')
-    except URLError, e:
+    except URLError:
         logger.info('Failed request. Error: %s', controller.results)
         return {
             'Status' : 'FAILURE',
@@ -96,7 +96,7 @@ def create_handler(event,context):
                 logger.info('Done with Setting up AWS account')
 
         logger.info('Done with Account creation')
-    except URLError, e:
+    except URLError:
         logger.info('Failed request. Error: %s', controller.results)
         return {
             'Status' : 'FAILURE',
@@ -167,7 +167,7 @@ def delete_handler(event, context):
             "PhysicalResourceId": "arn:aws:fake:myID"
         }
         cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
-    except URLError, e:
+    except URLError:
         logger.info('Failed request. Error: %s', controller.results)
         return {
             'Status' : 'FAILURE',

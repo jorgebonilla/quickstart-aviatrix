@@ -153,7 +153,7 @@ def handler(event, context):
             return {
                 'Status' : 'SUCCESS'
             }
-        except URLError, e:
+        except URLError:
             logger.info('Failed request. Error: %s', controller.results)
             return {
                 'Status' : 'FAILURE',
@@ -238,7 +238,7 @@ def handler(event, context):
                 Subject='New Hub HA Gateway',
                 Message=json.dumps(message)
             )
-        except URLError, e:
+        except URLError:
             logger.info('Failed request. Error: %s', controller.results)
             return {
                 'Status' : 'FAILURE',
@@ -346,7 +346,7 @@ def handler(event, context):
             return {
             'Status' : 'SUCCESS'
             }
-        except URLError, e:
+        except URLError:
             logger.info('Failed request. Error: %s', controller.results)
             return {
                 'Status' : 'FAILURE',
@@ -423,7 +423,7 @@ def handler(event, context):
             return {
                 'Status' : 'SUCCESS'
             }
-        except URLError, e:
+        except URLError:
             logger.info('Failed request. Error: %s', controller.results)
             return {
                 'Status' : 'FAILURE',
