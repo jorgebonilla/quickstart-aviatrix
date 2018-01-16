@@ -31,7 +31,7 @@
         region: us-east-1
         bucket: quickstart-aviatrix-us-east-1
         object: /templates/quickstart-aviatrix-vpc.template
-        src: ../templates/quickstart-aviatrix-vpc.template
+        src: ../quickstart-aviatrix/templates/quickstart-aviatrix-vpc.template
         mode: put
         permission: public-read
     - name: us-east-1 upload quickstart-aviatrix-iamroles.template
@@ -39,7 +39,7 @@
         region: us-east-1
         bucket: quickstart-aviatrix-us-east-1
         object: /templates/quickstart-aviatrix-iamroles.template
-        src: ../templates/quickstart-aviatrix-iamroles.template
+        src: ../quickstart-aviatrix/templates/quickstart-aviatrix-iamroles.template
         mode: put
         permission: public-read
     - name: us-east-1 upload quickstart-aviatrix-controller.template
@@ -47,7 +47,7 @@
         region: us-east-1
         bucket: quickstart-aviatrix-us-east-1
         object: /templates/quickstart-aviatrix-controller.template
-        src: ../templates/quickstart-aviatrix-controller.template
+        src: ../quickstart-aviatrix/templates/quickstart-aviatrix-controller.template
         mode: put
         permission: public-read
     - name: us-east-1 upload quickstart-aviatrix-lambda.template
@@ -55,7 +55,7 @@
         region: us-east-1
         bucket: quickstart-aviatrix-us-east-1
         object: /templates/quickstart-aviatrix-lambda.template
-        src: ../templates/quickstart-aviatrix-lambda.template
+        src: ../quickstart-aviatrix/templates/quickstart-aviatrix-lambda.template
         mode: put
         permission: public-read
     - name: us-east-1 upload quickstart-aviatrix-novpc-master.template
@@ -63,7 +63,7 @@
         region: us-east-1
         bucket: quickstart-aviatrix-us-east-1
         object: /templates/quickstart-aviatrix-novpc-master.template
-        src: ../templates/quickstart-aviatrix-novpc-master.template
+        src: ../quickstart-aviatrix/templates/quickstart-aviatrix-novpc-master.template
         mode: put
         permission: public-read
     - name: us-east-1 upload quickstart-aviatrix-vpc-master.template
@@ -71,7 +71,7 @@
         region: us-east-1
         bucket: quickstart-aviatrix-us-east-1
         object: /templates/quickstart-aviatrix-vpc-master.template
-        src: ../templates/quickstart-aviatrix-vpc-master.template
+        src: ../quickstart-aviatrix/templates/quickstart-aviatrix-vpc-master.template
         mode: put
         permission: public-read
 

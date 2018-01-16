@@ -14,3 +14,7 @@ phases:
   post_build:
     commands:
       - echo Entering the post_build phase...
+artifacts:
+  files:
+    - quickstart-aviatrix/templates/quickstart-aviatrix-*.template
+  discard-paths: yes
