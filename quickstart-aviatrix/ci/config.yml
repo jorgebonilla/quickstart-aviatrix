@@ -10,10 +10,10 @@ global:
   reporting: true
 
 tests:
-  quickstart-aviatrix-vpc:
-    parameter_input: quickstart-aviatrix-vpc-params.json
-    template_file: quickstart-aviatrix-vpc.template
-  # quickstart-aviatrixt-iamroles:
+  # quickstart-aviatrix-vpc:
+  #   parameter_input: quickstart-aviatrix-vpc-params.json
+  #   template_file: quickstart-aviatrix-vpc.template
+  # # quickstart-aviatrixt-iamroles:
   #   parameter_input: quickstart-aviatrix-iamroles-params.json
   #   regions:
   #     - us-east-1
@@ -27,6 +27,6 @@ tests:
   # quickstart-aviatrixt-novpc-master:
   #   parameter_input: quickstart-aviatrix-novpc-master-params.json
   #   template_file: quickstart-aviatrix-novpc-master.template
-  # quickstart-aviatrixt-vpc-master:
-  #   parameter_input: quickstart-aviatrix-vpc-master-params.json
-  #   template_file: quickstart-aviatrix-vpc-master.template
+  quickstart-aviatrixt-vpc-master:
+    parameter_input: quickstart-aviatrix-vpc-master-params.json
+    template_file: quickstart-aviatrix-vpc-master.template
