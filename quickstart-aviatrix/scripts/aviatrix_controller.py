@@ -18,6 +18,28 @@ USAGE_URL = "http://127.0.0.1:5001"
 USAGE_DATA = { 'launchtime': time.time(),
                'accountid':  boto3.client('sts').get_caller_identity().get('Account') }
 
+#Read environment Variables
+controller_ip = os.environ.get("Controller_IP")
+username = os.environ.get("Username")
+private_ip = os.environ.get("Private_IP")
+admin_email = os.environ.get("Admin_Email")
+password = os.environ.get("Password")
+account = os.environ.get("Account")
+aviatrixroleapp = os.environ.get("AviatrixRoleApp")
+aviatrixroleec2 = os.environ.get("AviatrixRoleEC2")
+vpcid_hub = os.environ.get("VPC")
+subnet_hub = os.environ.get("SubnetParam")
+subnet_hubHA = os.environ.get("SubnetParamHA")
+region_hub = os.environ.get("Region")
+gwsize_hub = os.environ.get("HubGWSizeParam")
+gateway_queue = os.environ.get("GatewayQueue")
+gatewaytopic = os.environ.get("GatewayTopic")
+licensemodel = os.environ.get("LicenseModel")
+license = os.environ.get("License")
+otheraccount = os.environ.get("OtherAccount")
+otheraccountroleapp = os.environ.get("OtherAccountRoleApp")
+otheraccountroleec2 = os.environ.get("OtherAccountRoleEC2")
+
 def send_usage_info(url,data):
     # sending POST request
     try:
@@ -28,28 +50,6 @@ def send_usage_info(url,data):
         return "Couldn't send out Usage Data"
 
 def create_handler(event,context):
-    #Read environment Variables
-    controller_ip = os.environ.get("Controller_IP")
-    username = os.environ.get("Username")
-    private_ip = os.environ.get("Private_IP")
-    admin_email = os.environ.get("Admin_Email")
-    password = os.environ.get("Password")
-    account = os.environ.get("Account")
-    aviatrixroleapp = os.environ.get("AviatrixRoleApp")
-    aviatrixroleec2 = os.environ.get("AviatrixRoleEC2")
-    vpcid_hub = os.environ.get("VPC")
-    subnet_hub = os.environ.get("SubnetParam")
-    subnet_hubHA = os.environ.get("SubnetParamHA")
-    region_hub = os.environ.get("Region")
-    gwsize_hub = os.environ.get("HubGWSizeParam")
-    gateway_queue = os.environ.get("GatewayQueue")
-    gatewaytopic = os.environ.get("GatewayTopic")
-    licensemodel = os.environ.get("LicenseModel")
-    license = os.environ.get("License")
-    otheraccount = os.environ.get("OtherAccount")
-    otheraccountroleapp = os.environ.get("OtherAccountRoleApp")
-    otheraccountroleec2 = os.environ.get("OtherAccountRoleEC2")
-
     #Start the Controller Initialization process
     try:
         controller = Aviatrix(controller_ip)
@@ -130,22 +130,6 @@ def create_handler(event,context):
     cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
 
 def delete_handler(event, context):
-    #Read environment Variables
-    controller_ip = os.environ.get("Controller_IP")
-    username = os.environ.get("Username")
-    private_ip = os.environ.get("Private_IP")
-    admin_email = os.environ.get("Admin_Email")
-    password = os.environ.get("Password")
-    account = os.environ.get("Account")
-    aviatrixroleapp = os.environ.get("AviatrixRoleApp")
-    aviatrixroleec2 = os.environ.get("AviatrixRoleEC2")
-    vpcid_hub = os.environ.get("VPC")
-    subnet_hub = os.environ.get("SubnetParam")
-    subnet_hubHA = os.environ.get("SubnetParamHA")
-    region_hub = os.environ.get("Region")
-    gwsize_hub = os.environ.get("HubGWSizeParam")
-    gateway_queue = os.environ.get("GatewayQueue")
-    gatewaytopic = os.environ.get("GatewayTopic")
     #Delete all tunnels and gateways
     try:
         logger.info('Starting with decomission of Controller')
@@ -178,10 +162,11 @@ def handler(event, context):
 # Main function handler
     print(event)
     action = event["RequestType"]
-    if action == "Delete":
-        delete_handler(event, context)
     if action == "Create":
         create_handler(event, context)
+    if action == "Delete":
+        delete_handler(event, context)
+
 
 
 # Create Event Example
