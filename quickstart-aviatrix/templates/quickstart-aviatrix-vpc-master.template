@@ -361,20 +361,8 @@
         }
       }
     },
-    "AviatrixKeyAlias": {
-      "Type": "AWS::KMS::Alias",
-      "Properties": {
-        "AliasName": "alias/AviatrixKey",
-        "TargetKeyId": {
-          "Ref": "AviatrixKey"
-        }
-      }
-    },
     "AviatrixGWQueue": {
-      "Type": "AWS::SQS::Queue",
-      "Properties": {
-        "QueueName": "GatewayQueue"
-      }
+      "Type": "AWS::SQS::Queue"
     },
     "AviatrixControllerLambda": {
       "DependsOn": "AviatrixEIP",
@@ -530,8 +518,7 @@
             "Fn::GetAtt": [ "AviatrixGatewayLambda", "Arn" ]
           },
           "Protocol": "lambda"
-        }],
-        "TopicName": "AviatrixGatewayTopic"
+        }]
       }
     },
     "InvokeGWLambda": {
