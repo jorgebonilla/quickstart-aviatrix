@@ -24,8 +24,8 @@ phases:
       - echo Entering the post_build phase...
       - cd $CODEBUILD_SRC_DIR/quickstart-aviatrix
       - chmod 555 quickstart-aviatrix/scripts/*
-      - zip -j quickstart-aviatrix/scripts/aviatrix_controller.py.zip quickstart-aviatrix/scripts/aviatrix_controller.py quickstart-aviatrix/scripts/aviatrix.py quickstart-aviatrix/scripts/cfnresponse.py
-      - zip -j quickstart-aviatrix/scripts/aviatrix_gateway.py.zip quickstart-aviatrix/scripts/aviatrix_gateway.py quickstart-aviatrix/scripts/aviatrix.py quickstart-aviatrix/scripts/cfnresponse.py
+      - zip -j quickstart-aviatrix/scripts/aviatrix_controller.py.zip quickstart-aviatrix/scripts/aviatrix_controller.py quickstart-aviatrix/scripts/aviatrix3.py quickstart-aviatrix/scripts/cfnresponse.py
+      - zip -j quickstart-aviatrix/scripts/aviatrix_gateway.py.zip quickstart-aviatrix/scripts/aviatrix_gateway.py quickstart-aviatrix/scripts/aviatrix3.py quickstart-aviatrix/scripts/cfnresponse.py
       - zip -j quickstart-aviatrix/scripts/aviatrix_poller.py.zip quickstart-aviatrix/scripts/aviatrix_poller.py
 artifacts:
   files:
