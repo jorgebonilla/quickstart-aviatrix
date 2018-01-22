@@ -39,7 +39,7 @@ def handler(event, context):
     #Read environment Variables
     gatewayqueue = os.environ.get("GatewayQueue")
     vpcid_hub = os.environ.get("HubVPC")
-    gwsize_spoke = os.environ.get("SpokeGWSizeParam")
+    gwsize_spoke = os.environ.get("SpokeGWSize")
     gatewaytopic = os.environ.get("GatewayTopic")
     spoketag = os.environ.get("SpokeTag")
     OtherAccountRoleApp = os.environ.get("OtherAccountRoleApp")

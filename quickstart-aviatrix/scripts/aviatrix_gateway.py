@@ -1,64 +1,22 @@
-import os, boto3
+import os, sys, boto3, urllib, ssl, json, logging
 from urllib2 import Request, urlopen, URLError
 from time import sleep
-import urllib, ssl, json, logging
 #Needed to load Aviatrix Python API.
-from aviatrix import Aviatrix
+from aviatrix3 import Aviatrix
+import cfnresponse
 
 #logging configuration
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-
-#Test deployhub Event JSON
-# {
-#     "action": "deployhub",
-#     "vpcid_hub": "vpc-19d25d61",
-#     "region_hub": "us-east-1",
-#     "gwsize_hub": "t2.small",
-#     "subnet_hub": "10.1.0.0/24"
-# }
-
-#Test deploygateway Event JSON
-# {
-#     "action": "deploygateway",
-#     "subnet_spoke": "192.168.1.0/24",
-#     "vpcid_spoke": "vpc-f940a381",
-#     "region_spoke": "us-east-1",
-#     "gwsize_spoke": "t2.micro",
-#     "vpcid_hub": "vpc-b53cb1cd"
-# }
-
-#Test deployhagateway Event JSON
-# {
-# 	"Records": [{
-# 		"Sns": {
-# 			"Message": {
-# 				"action": "deployhagateway",
-#                 "vpcid_ha": "hub-vpc-31fc7349",
-#                 "region_ha": "us-east-1",
-#                 "subnet_ha": "10.1.1.0/24"
-# 			}
-# 		}
-# 	}]
-# }
-
-
-#Testing Data:
-# Deploying a t2.micro takes ~3 minutes
-# Deploying a m4.xlarge takes ~3 minutes 30 seconds
-#
-
-#Test deletegateway Event JSON
-# {
-#     "action": "deletegateway",
-#     "region_spoke": "us-east-1",
-#     "vpcid_hub": "vpc-b53cb1cd",
-#     "vpcid_spoke": "vpc-f940a381"
-# }
-
-#Testing Data:
-# Destroying a t2.micro takes ~1 Min 30 seconds
+#Read environment Variables
+controller_ip = os.environ.get("Controller_IP")
+username = os.environ.get("Username")
+password = os.environ.get("Password")
+queue_url = os.environ.get("GatewayQueueURL")
+spoketag = os.environ.get("SpokeTag")
+gatewaytopic = event['Records'][0]['EventSubscriptionArn'][:55]
+OtherAccountRoleApp = os.environ.get("OtherAccountRoleApp")
 
 def tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag, tag):
     ec2.create_tags(Resources = [ vpcid_spoke ], Tags = [ { 'Key': spoketag, 'Value': tag } ])
@@ -99,236 +57,216 @@ def get_credentials(rolearn):
                                               RoleSessionName="aviatrix_poller" )
     return assume_role_response
 
-def handler(event, context):
-    #Read environment Variables
-    controller_ip = os.environ.get("Controller_IP")
-    username = os.environ.get("Username")
-    password = os.environ.get("Password")
-    queue_url = os.environ.get("GatewayQueueURL")
-    spoketag = os.environ.get("SpokeTag")
-    gatewaytopic = event['Records'][0]['EventSubscriptionArn'][:55]
-    OtherAccountRoleApp = os.environ.get("OtherAccountRoleApp")
-    # Receive message from SQS queue
-    #body=read_queue(queue_url)
-    logger.info('Received Message: %s', event)
-    body=json.loads(event['Records'][0]['Sns']['Message'])
-    logger.info('Received Message: %s', body)
-    #Case Deploy Hub
-    if body['action'] == 'deployhub':
-        #Variables
-        vpcid_hub = body['vpcid_hub']
-        region_hub = body['region_hub']
-        gwsize_hub = body['gwsize_hub']
-        subnet_hub = body['subnet_hub']
-        subnet_hubHA= body['subnet_hubHA']
-        #Processing
-        try:
-            #Open connection to controller
-            controller = Aviatrix(controller_ip)
-            controller.login(username,password)
-            #Hub Gateway Creation
-            logger.info('Creating Gateway: hub-%s', vpcid_hub)
-            controller.create_gateway("AWSAccount",
-                                      "1",
-                                      "hub-" + vpcid_hub,
-                                      vpcid_hub,
-                                      region_hub,
-                                      gwsize_hub,
-                                      subnet_hub)
-            #Send message to start HA gateway Deployment
-            message = {}
-            message['action'] = 'deployhubha'
-            message['vpcid_ha'] = 'hub-' + vpcid_hub
-            message['region_ha'] = region_hub
-            message['subnet_ha'] = subnet_hubHA
-            message['subnet_name'] = "Aviatrix VPC-Public Subnet HA"
-            #Add New Gateway to SNS
-            sns = boto3.client('sns')
-            sns.publish(
-                TopicArn=gatewaytopic,
-                Subject='New Hub HA Gateway',
-                Message=json.dumps(message)
-            )
-            logger.info('Done with Hub Gateway Deployment')
-            return {
-                'Status' : 'SUCCESS'
-            }
-        except URLError:
-            logger.info('Failed request. Error: %s', controller.results)
-            return {
-                'Status' : 'FAILURE',
-                'Error' : controller.results
-            }
-    #Case Deploy Hub HA
-    elif body['action'] == 'deployhubha':
-        #Variables for HA GW
-        vpcid_ha = body['vpcid_ha']
-        region_ha = body['region_ha']
-        subnet_ha = body['subnet_ha']
-        subnet_name = body['subnet_name']
-        specific_subnet = subnet_ha + "~~" + region_ha + "~~" + subnet_name
+def deploy_hub(controller,body):
+    #Variables
+    vpcid_hub = body['vpcid_hub']
+    region_hub = body['region_hub']
+    gwsize_hub = body['gwsize_hub']
+    subnet_hub = body['subnet_hub']
+    subnet_hubHA= body['subnet_hubHA']
+    original_event = body['original_event']
+    original_context = body['original_context']
+    #Processing
+    try:
+        #Hub Gateway Creation
+        logger.info('Creating Gateway: hub-%s', vpcid_hub)
+        controller.create_gateway("AWSAccount",
+                                  "1",
+                                  "hub-" + vpcid_hub,
+                                  vpcid_hub,
+                                  region_hub,
+                                  gwsize_hub,
+                                  subnet_hub)
+        logger.info('Done with Hub Gateway Deployment')
+        #Send message to start HA gateway Deployment
+        message = {}
+        message['action'] = 'deployhubha'
+        message['vpcid_ha'] = 'hub-' + vpcid_hub
+        message['region_ha'] = region_hub
+        message['subnet_ha'] = subnet_hubHA
+        message['subnet_name'] = "Aviatrix VPC-Public Subnet HA"
+        message['original_event'] = original_event
+        message['original_context'] = original_context
+        #Add New Gateway to SNS
+        logger.info('Sending message to create Hub HA GW')
+        sns = boto3.client('sns')
+        sns.publish(
+            TopicArn=gatewaytopic,
+            Subject='New Hub HA Gateway',
+            Message=json.dumps(message)
+        )
+        return {
+            'Status' : 'SUCCESS'
+        }
+    except URLError:
+        logger.info('Failed request. Error: %s', controller.results)
+        responseData = {
+            "PhysicalResourceId": "arn:aws:fake:myID",
+            "Cause" : controller.results
+        }
+        cfnresponse.send(original_event, original_context, cfnresponse.FAILURE, responseData)
+        sys.exit(1)
+
+def deploy_hub_ha(controller,body):
+    #Variables for HA GW
+    vpcid_ha = body['vpcid_ha']
+    region_ha = body['region_ha']
+    subnet_ha = body['subnet_ha']
+    subnet_name = body['subnet_name']
+    specific_subnet = subnet_ha + "~~" + region_ha + "~~" + subnet_name
+    message['original_event'] = original_event
+    message['original_context'] = original_context
+    try:
         #Processing
         logger.info('Processing HA Gateway %s.', vpcid_ha)
-        #Open connection to controller
-        controller = Aviatrix(controller_ip)
-        controller.login(username,password)
         #HA Gateway Creation
         logger.info('Creating HA Gateway: %s', vpcid_ha)
         controller.enable_vpc_ha(vpcid_ha,specific_subnet)
         logger.info('Created HA Gateway: %s', vpcid_ha)
         sleep(10)
         logger.info('Done with HA Hub Gateway Deployment')
-    #Case Deploy Gateway
-    elif body['action'] == 'deploygateway':
-        #Variables
-        subnet_spoke = body['subnet_spoke']
-        subnet_spoke_ha = body['subnet_spoke_ha']
-        subnet_spoke_name = body['subnet_spoke_name']
-        vpcid_spoke = body['vpcid_spoke']
-        region_spoke = body['region_spoke']
-        gwsize_spoke = body['gwsize_spoke']
-        vpcid_hub = body['vpcid_hub']
-        vpc_cidr_spoke = body['vpc_cidr_spoke']
-        try:
-            otheraccount = body['otheraccount']
-            awsaccount = "AWSOtherAccount"
-            other_credentials = get_credentials(OtherAccountRoleApp)
-            region_id=region_spoke
-            ec2=boto3.client('ec2',
-                             region_name=region_id,
-                             aws_access_key_id=other_credentials['Credentials']['AccessKeyId'],
-                             aws_secret_access_key=other_credentials['Credentials']['SecretAccessKey'],
-                             aws_session_token=other_credentials['Credentials']['SessionToken'] )
-        except KeyError:
-            awsaccount = "AWSAccount"
-            ec2=boto3.client('ec2',region_name=region_spoke)
-        #Processing
-        logger.info('Processing VPC %s. Updating tag:%s to processing' % (vpcid_spoke, spoketag))
-        tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'processing')
-        try:
+        #responseData
+        responseData = {
+            "PhysicalResourceId": "arn:aws:fake:myID"
+        }
+        cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
+    except URLError:
+        logger.info('Failed request. Error: %s', controller.results)
+        responseData = {
+            "PhysicalResourceId": "arn:aws:fake:myID",
+            "Cause" : controller.results
+        }
+        cfnresponse.send(original_event, original_context, cfnresponse.FAILURE, responseData)
+        sys.exit(1)
+
+def handler(event, context):
+
+    # Receive message from SQS queue
+    #body=read_queue(queue_url)
+    logger.info('Received Message: %s', event)
+    body=json.loads(event['Records'][0]['Sns']['Message'])
+    logger.info('Received Message: %s', body)
+    try:
+        #Open connection to controller
+        controller = Aviatrix(controller_ip)
+        controller.login(username,password)
+        #Case Deploy Hub
+        if body['action'] == 'deployhub':
+            response = deploy_hub(controller,body)
+        #Case Deploy Hub HA
+        elif body['action'] == 'deployhubha':
+            response = deploy_hub_ha(controller,body)
+        #Case Deploy Gateway
+        elif body['action'] == 'deploygateway':
+            #Variables
+            subnet_spoke = body['subnet_spoke']
+            subnet_spoke_ha = body['subnet_spoke_ha']
+            subnet_spoke_name = body['subnet_spoke_name']
+            vpcid_spoke = body['vpcid_spoke']
+            region_spoke = body['region_spoke']
+            gwsize_spoke = body['gwsize_spoke']
+            vpcid_hub = body['vpcid_hub']
+            vpc_cidr_spoke = body['vpc_cidr_spoke']
+            try:
+                otheraccount = body['otheraccount']
+                awsaccount = "AWSOtherAccount"
+                other_credentials = get_credentials(OtherAccountRoleApp)
+                region_id=region_spoke
+                ec2=boto3.client('ec2',
+                                 region_name=region_id,
+                                 aws_access_key_id=other_credentials['Credentials']['AccessKeyId'],
+                                 aws_secret_access_key=other_credentials['Credentials']['SecretAccessKey'],
+                                 aws_session_token=other_credentials['Credentials']['SessionToken'] )
+            except KeyError:
+                awsaccount = "AWSAccount"
+                ec2=boto3.client('ec2',region_name=region_spoke)
+            #Processing
+            logger.info('Processing VPC %s. Updating tag:%s to processing' % (vpcid_spoke, spoketag))
+            tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'processing')
+            try:
+                #Open connection to controller
+                controller = Aviatrix(controller_ip)
+                controller.login(username,password)
+                #Spoke Gateway Creation
+                logger.info('Creating Gateway: spoke-%s', vpcid_spoke)
+                controller.create_gateway(awsaccount,
+                                          "1",
+                                          "spoke-"+vpcid_spoke,
+                                          vpcid_spoke,
+                                          region_spoke,
+                                          gwsize_spoke,
+                                          subnet_spoke)
+                sleep(20)
+                logger.info('Creating HA Gateway: spoke-%s', vpcid_spoke)
+                #Send message to start HA gateway Deployment
+                message = {}
+                message['action'] = 'deploygatewayha'
+                message['vpcid_ha'] = 'spoke-' + vpcid_spoke
+                message['region_ha'] = region_spoke
+                message['subnet_ha'] = subnet_spoke_ha
+                message['subnet_name'] = subnet_spoke_name
+                message['vpcid_spoke'] = vpcid_spoke
+                message['vpcid_hub'] = vpcid_hub
+                message['vpc_cidr_spoke'] = vpc_cidr_spoke
+
+                #Add New Gateway to SNS
+                sns = boto3.client('sns')
+                sns.publish(
+                    TopicArn=gatewaytopic,
+                    Subject='New Hub HA Gateway',
+                    Message=json.dumps(message)
+                )
+            except URLError:
+                logger.info('Failed request. Error: %s', controller.results)
+                return {
+                    'Status' : 'FAILURE',
+                    'Error' : controller.results
+                }
+        #Case Deploy Gateway HA
+        elif body['action'] == 'deploygatewayha':
+            #Variables for HA GW
+            vpcid_ha = body['vpcid_ha']
+            region_ha = body['region_ha']
+            subnet_ha = body['subnet_ha']
+            subnet_name = body['subnet_name']
+            vpcid_spoke = body['vpcid_spoke']
+            vpcid_hub = body['vpcid_hub']
+            vpc_cidr_spoke = body['vpc_cidr_spoke']
+            specific_subnet = subnet_ha + "~~" + region_ha + "~~" + subnet_name
+            #Processing
+            logger.info('Processing HA Gateway %s.', vpcid_ha)
             #Open connection to controller
             controller = Aviatrix(controller_ip)
             controller.login(username,password)
-            #Spoke Gateway Creation
-            logger.info('Creating Gateway: spoke-%s', vpcid_spoke)
-            controller.create_gateway(awsaccount,
-                                      "1",
-                                      "spoke-"+vpcid_spoke,
-                                      vpcid_spoke,
-                                      region_spoke,
-                                      gwsize_spoke,
-                                      subnet_spoke)
-            sleep(20)
-            logger.info('Creating HA Gateway: spoke-%s', vpcid_spoke)
-            #Send message to start HA gateway Deployment
+            #HA Gateway Creation
+            logger.info('Creating HA Gateway: %s', vpcid_ha)
+            controller.enable_vpc_ha(vpcid_ha,specific_subnet)
+            logger.info('Created HA Gateway: %s', vpcid_ha)
+            sleep(10)
+            #Call to create the peering And routing
             message = {}
-            message['action'] = 'deploygatewayha'
+            message['action'] = 'create_peering'
             message['vpcid_ha'] = 'spoke-' + vpcid_spoke
-            message['region_ha'] = region_spoke
-            message['subnet_ha'] = subnet_spoke_ha
-            message['subnet_name'] = subnet_spoke_name
+            message['region_spoke'] = region_ha
             message['vpcid_spoke'] = vpcid_spoke
             message['vpcid_hub'] = vpcid_hub
             message['vpc_cidr_spoke'] = vpc_cidr_spoke
-
             #Add New Gateway to SNS
             sns = boto3.client('sns')
             sns.publish(
                 TopicArn=gatewaytopic,
-                Subject='New Hub HA Gateway',
+                Subject='Create Peering and Routing for new GW',
                 Message=json.dumps(message)
             )
-        except URLError:
-            logger.info('Failed request. Error: %s', controller.results)
-            return {
-                'Status' : 'FAILURE',
-                'Error' : controller.results
-            }
-    #Case Deploy Gateway HA
-    elif body['action'] == 'deploygatewayha':
-        #Variables for HA GW
-        vpcid_ha = body['vpcid_ha']
-        region_ha = body['region_ha']
-        subnet_ha = body['subnet_ha']
-        subnet_name = body['subnet_name']
-        vpcid_spoke = body['vpcid_spoke']
-        vpcid_hub = body['vpcid_hub']
-        vpc_cidr_spoke = body['vpc_cidr_spoke']
-        specific_subnet = subnet_ha + "~~" + region_ha + "~~" + subnet_name
-        #Processing
-        logger.info('Processing HA Gateway %s.', vpcid_ha)
-        #Open connection to controller
-        controller = Aviatrix(controller_ip)
-        controller.login(username,password)
-        #HA Gateway Creation
-        logger.info('Creating HA Gateway: %s', vpcid_ha)
-        controller.enable_vpc_ha(vpcid_ha,specific_subnet)
-        logger.info('Created HA Gateway: %s', vpcid_ha)
-        sleep(10)
-        #Call to create the peering And routing
-        message = {}
-        message['action'] = 'create_peering'
-        message['vpcid_ha'] = 'spoke-' + vpcid_spoke
-        message['region_spoke'] = region_ha
-        message['vpcid_spoke'] = vpcid_spoke
-        message['vpcid_hub'] = vpcid_hub
-        message['vpc_cidr_spoke'] = vpc_cidr_spoke
-        #Add New Gateway to SNS
-        sns = boto3.client('sns')
-        sns.publish(
-            TopicArn=gatewaytopic,
-            Subject='Create Peering and Routing for new GW',
-            Message=json.dumps(message)
-        )
 
-        logger.info('Done with HA Gateway Deployment')
-    #Case Deploy peering
-    elif body['action'] == 'create_peering':
-        #Variables
-        vpcid_spoke = body['vpcid_spoke']
-        region_spoke = body['region_spoke']
-        vpcid_hub = body['vpcid_hub']
-        vpc_cidr_spoke = body['vpc_cidr_spoke']
-        try:
-            otheraccount = body['otheraccount']
-            awsaccount = "AWSOtherAccount"
-            other_credentials = get_credentials(OtherAccountRoleApp)
-            region_id=region_spoke
-            ec2=boto3.client('ec2',
-                             region_name=region_id,
-                             aws_access_key_id=other_credentials['Credentials']['AccessKeyId'],
-                             aws_secret_access_key=other_credentials['Credentials']['SecretAccessKey'],
-                             aws_session_token=other_credentials['Credentials']['SessionToken'] )
-        except KeyError:
-            awsaccount = "AWSAccount"
-            ec2=boto3.client('ec2',region_name=region_spoke)
-        try:
-            #Open connection to controller
-            controller = Aviatrix(controller_ip)
-            controller.login(username,password)
-            #Peering Hub/Spoke
-            logger.info('Peering: hub-%s --> spoke-%s' % (vpcid_hub, vpcid_spoke))
-            controller.peering("hub-"+vpcid_hub, "spoke-"+vpcid_spoke)
-            #get the list of existing Spokes
-            controller.list_peers_vpc_pairs()
-            found_pairs = controller.results
-            #Find the CIDRs of existing peerings on Primary/Secondary Account
-            existing_spokes = find_other_spokes(ec2,found_pairs,[])
-            #Find the CIDRs of existing peerings on Primary Account (in case current spoke is secondary)
-            if awsaccount == "AWSOtherAccount":
-                ec2_primary=boto3.client('ec2',region_name=region_spoke)
-                existing_spokes = find_other_spokes(ec2_primary,found_pairs,existing_spokes)
-            #Creating the transitive connections
-            logger.info('Creating Transitive routes, Data: %s' % existing_spokes)
-            if existing_spokes:
-                for existing_spoke in existing_spokes:
-                    if existing_spoke['vpc_name'] != 'spoke-' + vpcid_spoke:
-                        controller.add_extended_vpc_peer('spoke-' + vpcid_spoke, 'hub-' + vpcid_hub, existing_spoke['subnet'])
-                        controller.add_extended_vpc_peer(existing_spoke['vpc_name'],'hub-' + vpcid_hub, vpc_cidr_spoke)
-            logger.info('Finished creating Transitive routes')
-
-            logger.info('Done Peering %s. Updating tag:%s to peered' %  (vpcid_spoke, spoketag))
-            #reconnect to right Account:
+            logger.info('Done with HA Gateway Deployment')
+        #Case Deploy peering
+        elif body['action'] == 'create_peering':
+            #Variables
+            vpcid_spoke = body['vpcid_spoke']
+            region_spoke = body['region_spoke']
+            vpcid_hub = body['vpcid_hub']
+            vpc_cidr_spoke = body['vpc_cidr_spoke']
             try:
                 otheraccount = body['otheraccount']
                 awsaccount = "AWSOtherAccount"
@@ -342,90 +280,136 @@ def handler(event, context):
             except KeyError:
                 awsaccount = "AWSAccount"
                 ec2=boto3.client('ec2',region_name=region_spoke)
-            tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'peered')
-            return {
-            'Status' : 'SUCCESS'
-            }
-        except URLError:
-            logger.info('Failed request. Error: %s', controller.results)
-            return {
-                'Status' : 'FAILURE',
-                'Error' : controller.results
-            }
-    #Case Delete Gateway
-    elif body['action'] == 'deletegateway':
-        #Variables
-        region_spoke = body['region_spoke']
-        vpcid_hub = body['vpcid_hub']
-        vpcid_spoke = body['vpcid_spoke']
-        subnet_spoke = body['subnet_spoke']
-        try:
-            otheraccount = body['otheraccount']
-            awsaccount = "AWSOtherAccount"
-            other_credentials = get_credentials(OtherAccountRoleApp)
-            region_id=region_spoke
-            ec2=boto3.client('ec2',
-                             region_name=region_id,
-                             aws_access_key_id=other_credentials['Credentials']['AccessKeyId'],
-                             aws_secret_access_key=other_credentials['Credentials']['SecretAccessKey'],
-                             aws_session_token=other_credentials['Credentials']['SessionToken'] )
-        except KeyError:
-            awsaccount = "AWSAccount"
-            ec2=boto3.client('ec2',region_name=region_spoke)
-        #Processing
-        logger.info('Processing unpeer of VPC %s. Updating tag:%s to processing' %  (vpcid_spoke,spoketag))
-        tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'processing')
-        try:
-            #Open connection to controller
-            controller = Aviatrix(controller_ip)
-            controller.login(username,password)
-
-            #get the list of existing Spokes
-            controller.list_peers_vpc_pairs()
-            found_pairs = controller.results
-            #Find the CIDRs of existing peerings on Primary/Secondary Account
-            existing_spokes = find_other_spokes(ec2,found_pairs,[])
-            #Find the CIDRs of existing peerings on Primary Account (in case current spoke is secondary)
-            if awsaccount == "AWSOtherAccount":
-                ec2_primary=boto3.client('ec2',region_name=region_spoke)
-                existing_spokes = find_other_spokes(ec2_primary,found_pairs,existing_spokes)
-            #Delete Transitive routes
-            if existing_spokes:
-                for existing_spoke in existing_spokes:
-                    if existing_spoke['vpc_name'] != 'spoke-' + vpcid_spoke:
-                        controller.delete_extended_vpc_peer('spoke-' + vpcid_spoke, 'hub-' + vpcid_hub, existing_spoke['subnet'])
-                        controller.delete_extended_vpc_peer(existing_spoke['vpc_name'],'hub-' + vpcid_hub, subnet_spoke)
-
-
-            #Reconnect with right account:
             try:
-                otheraccount = body['otheraccount']
-                awsaccount = "AWSOtherAccount"
-                other_credentials = get_credentials(OtherAccountRoleApp)
-                region_id=region_spoke
-                ec2=boto3.client('ec2',
-                                 region_name=region_id,
-                                 aws_access_key_id=other_credentials['Credentials']['AccessKeyId'],
-                                 aws_secret_access_key=other_credentials['Credentials']['SecretAccessKey'],
-                                 aws_session_token=other_credentials['Credentials']['SessionToken'] )
-            except KeyError:
-                awsaccount = "AWSAccount"
-                ec2=boto3.client('ec2',region_name=region_spoke)
-            #Unpeering
-            logger.info('UnPeering: hub-%s --> spoke-%s' % (vpcid_hub, vpcid_spoke))
-            tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'unpeering')
-            controller.unpeering("hub-"+vpcid_hub, "spoke-"+vpcid_spoke)
-            #Spoke Gateway Delete
-            logger.info('Deleting Gateway: spoke-%s', vpcid_spoke)
-            controller.delete_gateway("1", "spoke-"+vpcid_spoke)
-            logger.info('Done unPeering %s. Updating tag:%s to unpeered' % (vpcid_spoke,spoketag))
-            tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'unpeered')
-            return {
+                #Open connection to controller
+                controller = Aviatrix(controller_ip)
+                controller.login(username,password)
+                #Peering Hub/Spoke
+                logger.info('Peering: hub-%s --> spoke-%s' % (vpcid_hub, vpcid_spoke))
+                controller.peering("hub-"+vpcid_hub, "spoke-"+vpcid_spoke)
+                #get the list of existing Spokes
+                controller.list_peers_vpc_pairs()
+                found_pairs = controller.results
+                #Find the CIDRs of existing peerings on Primary/Secondary Account
+                existing_spokes = find_other_spokes(ec2,found_pairs,[])
+                #Find the CIDRs of existing peerings on Primary Account (in case current spoke is secondary)
+                if awsaccount == "AWSOtherAccount":
+                    ec2_primary=boto3.client('ec2',region_name=region_spoke)
+                    existing_spokes = find_other_spokes(ec2_primary,found_pairs,existing_spokes)
+                #Creating the transitive connections
+                logger.info('Creating Transitive routes, Data: %s' % existing_spokes)
+                if existing_spokes:
+                    for existing_spoke in existing_spokes:
+                        if existing_spoke['vpc_name'] != 'spoke-' + vpcid_spoke:
+                            controller.add_extended_vpc_peer('spoke-' + vpcid_spoke, 'hub-' + vpcid_hub, existing_spoke['subnet'])
+                            controller.add_extended_vpc_peer(existing_spoke['vpc_name'],'hub-' + vpcid_hub, vpc_cidr_spoke)
+                logger.info('Finished creating Transitive routes')
+
+                logger.info('Done Peering %s. Updating tag:%s to peered' %  (vpcid_spoke, spoketag))
+                #reconnect to right Account:
+                try:
+                    otheraccount = body['otheraccount']
+                    awsaccount = "AWSOtherAccount"
+                    other_credentials = get_credentials(OtherAccountRoleApp)
+                    region_id=region_spoke
+                    ec2=boto3.client('ec2',
+                                     region_name=region_id,
+                                     aws_access_key_id=other_credentials['Credentials']['AccessKeyId'],
+                                     aws_secret_access_key=other_credentials['Credentials']['SecretAccessKey'],
+                                     aws_session_token=other_credentials['Credentials']['SessionToken'] )
+                except KeyError:
+                    awsaccount = "AWSAccount"
+                    ec2=boto3.client('ec2',region_name=region_spoke)
+                tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'peered')
+                return {
                 'Status' : 'SUCCESS'
-            }
-        except URLError:
-            logger.info('Failed request. Error: %s', controller.results)
-            return {
-                'Status' : 'FAILURE',
-                'Error' : controller.results
-            }
+                }
+            except URLError:
+                logger.info('Failed request. Error: %s', controller.results)
+                return {
+                    'Status' : 'FAILURE',
+                    'Error' : controller.results
+                }
+        #Case Delete Gateway
+        elif body['action'] == 'deletegateway':
+            #Variables
+            region_spoke = body['region_spoke']
+            vpcid_hub = body['vpcid_hub']
+            vpcid_spoke = body['vpcid_spoke']
+            subnet_spoke = body['subnet_spoke']
+            try:
+                otheraccount = body['otheraccount']
+                awsaccount = "AWSOtherAccount"
+                other_credentials = get_credentials(OtherAccountRoleApp)
+                region_id=region_spoke
+                ec2=boto3.client('ec2',
+                                 region_name=region_id,
+                                 aws_access_key_id=other_credentials['Credentials']['AccessKeyId'],
+                                 aws_secret_access_key=other_credentials['Credentials']['SecretAccessKey'],
+                                 aws_session_token=other_credentials['Credentials']['SessionToken'] )
+            except KeyError:
+                awsaccount = "AWSAccount"
+                ec2=boto3.client('ec2',region_name=region_spoke)
+            #Processing
+            logger.info('Processing unpeer of VPC %s. Updating tag:%s to processing' %  (vpcid_spoke,spoketag))
+            tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'processing')
+            try:
+                #Open connection to controller
+                controller = Aviatrix(controller_ip)
+                controller.login(username,password)
+
+                #get the list of existing Spokes
+                controller.list_peers_vpc_pairs()
+                found_pairs = controller.results
+                #Find the CIDRs of existing peerings on Primary/Secondary Account
+                existing_spokes = find_other_spokes(ec2,found_pairs,[])
+                #Find the CIDRs of existing peerings on Primary Account (in case current spoke is secondary)
+                if awsaccount == "AWSOtherAccount":
+                    ec2_primary=boto3.client('ec2',region_name=region_spoke)
+                    existing_spokes = find_other_spokes(ec2_primary,found_pairs,existing_spokes)
+                #Delete Transitive routes
+                if existing_spokes:
+                    for existing_spoke in existing_spokes:
+                        if existing_spoke['vpc_name'] != 'spoke-' + vpcid_spoke:
+                            controller.delete_extended_vpc_peer('spoke-' + vpcid_spoke, 'hub-' + vpcid_hub, existing_spoke['subnet'])
+                            controller.delete_extended_vpc_peer(existing_spoke['vpc_name'],'hub-' + vpcid_hub, subnet_spoke)
+
+
+                #Reconnect with right account:
+                try:
+                    otheraccount = body['otheraccount']
+                    awsaccount = "AWSOtherAccount"
+                    other_credentials = get_credentials(OtherAccountRoleApp)
+                    region_id=region_spoke
+                    ec2=boto3.client('ec2',
+                                     region_name=region_id,
+                                     aws_access_key_id=other_credentials['Credentials']['AccessKeyId'],
+                                     aws_secret_access_key=other_credentials['Credentials']['SecretAccessKey'],
+                                     aws_session_token=other_credentials['Credentials']['SessionToken'] )
+                except KeyError:
+                    awsaccount = "AWSAccount"
+                    ec2=boto3.client('ec2',region_name=region_spoke)
+                #Unpeering
+                logger.info('UnPeering: hub-%s --> spoke-%s' % (vpcid_hub, vpcid_spoke))
+                tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'unpeering')
+                controller.unpeering("hub-"+vpcid_hub, "spoke-"+vpcid_spoke)
+                #Spoke Gateway Delete
+                logger.info('Deleting Gateway: spoke-%s', vpcid_spoke)
+                controller.delete_gateway("1", "spoke-"+vpcid_spoke)
+                logger.info('Done unPeering %s. Updating tag:%s to unpeered' % (vpcid_spoke,spoketag))
+                tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'unpeered')
+                return {
+                    'Status' : 'SUCCESS'
+                }
+            except URLError:
+                logger.info('Failed request. Error: %s', controller.results)
+                return {
+                    'Status' : 'FAILURE',
+                    'Error' : controller.results
+                }
+    except URLError:
+        logger.info('Failed request. Error: %s', controller.results)
+        return {
+            'Status' : 'FAILURE',
+            'Error' : controller.results
+        }

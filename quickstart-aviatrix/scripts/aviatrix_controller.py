@@ -1,11 +1,11 @@
-import os
+import os, sys
 import boto3
 import json
 import logging
-from urllib2 import Request, urlopen, URLError
+from urllib.request import Request, urlopen, URLError
 import urllib
 #Needed to load Aviatrix Python API.
-from aviatrix import Aviatrix
+from aviatrix3 import Aviatrix
 #Needed for Lambda Custom call
 import cfnresponse
 import time
@@ -16,7 +16,8 @@ logger.setLevel(logging.INFO)
 
 USAGE_URL = "http://127.0.0.1:5001"
 USAGE_DATA = { 'launchtime': time.time(),
-               'accountid':  boto3.client('sts').get_caller_identity().get('Account') }
+               # 'accountid':  boto3.client('sts').get_caller_identity().get('Account')
+               }
 
 #Read environment Variables
 controller_ip = os.environ.get("Controller_IP")
@@ -28,10 +29,10 @@ account = os.environ.get("Account")
 aviatrixroleapp = os.environ.get("AviatrixRoleApp")
 aviatrixroleec2 = os.environ.get("AviatrixRoleEC2")
 vpcid_hub = os.environ.get("VPC")
-subnet_hub = os.environ.get("SubnetParam")
-subnet_hubHA = os.environ.get("SubnetParamHA")
+subnet_hub = os.environ.get("Subnet")
+subnet_hubHA = os.environ.get("Subnet")
 region_hub = os.environ.get("Region")
-gwsize_hub = os.environ.get("HubGWSizeParam")
+gwsize_hub = os.environ.get("HubGWSize")
 gateway_queue = os.environ.get("GatewayQueue")
 gatewaytopic = os.environ.get("GatewayTopic")
 licensemodel = os.environ.get("LicenseModel")
@@ -49,7 +50,7 @@ def send_usage_info(url,data):
     except URLError:
         return "Couldn't send out Usage Data"
 
-def create_handler(event,context):
+def controller_initialize(controller_ip,username,private_ip,password,admin_email,upgrade=False):
     #Start the Controller Initialization process
     try:
         controller = Aviatrix(controller_ip)
@@ -57,51 +58,78 @@ def create_handler(event,context):
         controller.admin_email(admin_email)
         controller.change_password(username,username,private_ip,password)
         controller.login(username,password)
-        controller.initial_setup("run")
+        if upgrade:
+            controller.initial_setup("run")
         logger.info('Done with Initial Controller Setup')
+        return {
+            'Status' : 'SUCCESS',
+            'Controller' : controller
+        }
     except URLError:
         logger.info('Failed request. Error: %s', controller.results)
-        return {
-            'Status' : 'FAILURE',
-            'Error' : controller.results
+        responseData = {
+            "PhysicalResourceId": "arn:aws:fake:myID",
+            "Cause" : controller.results
         }
-    # #Account Setup
+        cfnresponse.send(event, context, cfnresponse.FAILURE, responseData)
+        sys.exit(1)
+
+def controller_account_setup(controller,admin_email,account,aviatrixroleapp,aviatrixroleec2,other=False):
+    #Account Setup
     try:
-        controller = Aviatrix(controller_ip)
-        controller.login(username,password)
-        logger.info('Done with Initial Controller Setup')
-        if licensemodel == "BYOL":
-            logger.info('Setting up License ')
-            controller.setup_customer_id(license)
-            logger.info('Done with License Setup')
-        logger.info('Setting up AWS Account')
-        controller.setup_account_profile("AWSAccount",
+        if other:
+            account_name="AWSAccount"
+        else:
+            account_name="AWSOtherAccount"
+        controller.setup_account_profile(account_name,
                                          password,
                                          admin_email,
                                          "1",
                                          account,
                                          aviatrixroleapp,
                                          aviatrixroleec2)
-        logger.info('Done with Setting up AWS account')
-        if otheraccountroleapp:
-            if otheraccountroleec2:
-                logger.info('Setting up AWS Other Account')
-                controller.setup_account_profile("AWSOtherAccount",
-                                                 password,
-                                                 admin_email,
-                                                 "1",
-                                                 otheraccount,
-                                                 otheraccountroleapp,
-                                                 otheraccountroleec2)
-                logger.info('Done with Setting up AWS account')
-
-        logger.info('Done with Account creation')
+        logger.info('Done with Setting up %s' % account_name)
+        return {
+            'Status' : 'SUCCESS'
+        }
     except URLError:
         logger.info('Failed request. Error: %s', controller.results)
-        return {
-            'Status' : 'FAILURE',
-            'Error' : controller.results
+        responseData = {
+            "PhysicalResourceId": "arn:aws:fake:myID",
+            "Cause" : controller.results
         }
+        cfnresponse.send(event, context, cfnresponse.FAILURE, responseData)
+        sys.exit(1)
+
+def controller_setup_license(controller,licensemodel,license):
+    #License Setup
+    if licensemodel == "BYOL":
+        logger.info('Setting up License ')
+        try:
+            controller.setup_customer_id(license)
+            logger.info('Done with License Setup')
+            return {
+                'Status' : 'SUCCESS'
+            }
+        except URLError:
+            logger.info('Failed request. Error: %s', controller.results)
+            return {
+                'Status' : 'FAILURE',
+                'Error' : controller.results
+            }
+
+def create_handler(event,context):
+    #Initialize the Aviatrix Controller
+    response=controller_initialize(controller_ip,username,private_ip,password,admin_email,True)
+    controller=response['Controller']
+    #Setup License
+    response = controller_setup_license(controller,licensemodel,license)
+    #Setup Accounts
+    response = controller_account_setup(controller,admin_email,account,aviatrixroleapp,aviatrixroleec2,False)
+    if otheraccount != "":
+        other_response=controller_account_setup(controller,admin_email,otheraccount,otheraccountroleapp,otheraccountroleec2,True)
+    logger.info('Done with Controller Setup')
+
     #Gather necessary info to deploy Hub GW
     message = {}
     message['action'] = 'deployhub'
@@ -110,20 +138,20 @@ def create_handler(event,context):
     message['gwsize_hub'] = gwsize_hub
     message['subnet_hub'] = subnet_hub
     message['subnet_hubHA'] = subnet_hubHA
+    message['original_event'] = event
+    message['original_context'] = context
     logger.info('Creating Hub VPC %s. Sending SQS message', message['vpcid_hub'])
-
-    #Add New Hub Gateway to SQS
-    #sqs = boto3.resource('sqs')
     sns = boto3.client('sns')
-    #queue = sqs.get_queue_by_name(QueueName=gateway_queue)
-    #response = queue.send_message(MessageBody=json.dumps(message))
     sns.publish(
         TopicArn=gatewaytopic,
         Subject='Create Hub Gateway',
         Message=json.dumps(message)
     )
+
+    #Run this only once to report who is utilizing this script back to Aviatrix
     usage_response = send_usage_info(USAGE_URL,USAGE_DATA)
     logger.info('Usage Data Response: %s' % (usage_response))
+    #responseData
     responseData = {
         "PhysicalResourceId": "arn:aws:fake:myID"
     }
