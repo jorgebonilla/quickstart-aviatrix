@@ -2,8 +2,8 @@ import os, sys
 import boto3
 import json
 import logging
-from urllib.request import Request, urlopen, URLError
-import urllib
+from urllib.request import urlopen, URLError
+from urllib.parse import urlencode
 #Needed to load Aviatrix Python API.
 from aviatrix3 import Aviatrix
 #Needed for Lambda Custom call
@@ -15,7 +15,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 USAGE_URL = "http://127.0.0.1:5001"
-USAGE_DATA = { 'launchtime': time.time(),
+USAGE_DATA = { 'launchtime': time.time()
                # 'accountid':  boto3.client('sts').get_caller_identity().get('Account')
                }
 
@@ -30,7 +30,7 @@ aviatrixroleapp = os.environ.get("AviatrixRoleApp")
 aviatrixroleec2 = os.environ.get("AviatrixRoleEC2")
 vpcid_hub = os.environ.get("VPC")
 subnet_hub = os.environ.get("Subnet")
-subnet_hubHA = os.environ.get("Subnet")
+subnet_hubHA = os.environ.get("SubnetHA")
 region_hub = os.environ.get("Region")
 gwsize_hub = os.environ.get("HubGWSize")
 gateway_queue = os.environ.get("GatewayQueue")
@@ -44,7 +44,7 @@ otheraccountroleec2 = os.environ.get("OtherAccountRoleEC2")
 def send_usage_info(url,data):
     # sending POST request
     try:
-        parameters = urllib.urlencode(data)
+        parameters = urlencode(data)
         response = urlopen(url, data=parameters)
         return "Usage Data sent"
     except URLError:
@@ -138,8 +138,8 @@ def create_handler(event,context):
     message['gwsize_hub'] = gwsize_hub
     message['subnet_hub'] = subnet_hub
     message['subnet_hubHA'] = subnet_hubHA
-    message['original_event'] = event
-    message['original_context'] = context
+    message['original_event'] = str(event)
+    message['original_context'] = str(context)
     logger.info('Creating Hub VPC %s. Sending SQS message', message['vpcid_hub'])
     sns = boto3.client('sns')
     sns.publish(
@@ -149,13 +149,9 @@ def create_handler(event,context):
     )
 
     #Run this only once to report who is utilizing this script back to Aviatrix
-    usage_response = send_usage_info(USAGE_URL,USAGE_DATA)
-    logger.info('Usage Data Response: %s' % (usage_response))
-    #responseData
-    responseData = {
-        "PhysicalResourceId": "arn:aws:fake:myID"
-    }
-    cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
+    # usage_response = send_usage_info(USAGE_URL,USAGE_DATA)
+    # logger.info('Usage Data Response: %s' % (usage_response))
+
 
 def delete_handler(event, context):
     #Delete all tunnels and gateways
