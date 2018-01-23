@@ -262,7 +262,7 @@
       }
     },
 
-    "AviatrixKey": {
+    "AVXKey": {
       "Type": "AWS::KMS::Key",
       "Properties": {
         "Description": "Key to encrypt Aviatrix Data",
@@ -301,10 +301,10 @@
         }
       }
     },
-    "AviatrixGWQueue": {
+    "AVXGWQueue": {
       "Type": "AWS::SQS::Queue"
     },
-    "AviatrixControllerLambda": {
+    "AVXControllerLambda": {
       "DependsOn": "AVXEIP",
       "Type": "AWS::Lambda::Function",
       "Properties": {
@@ -316,10 +316,10 @@
           "S3Bucket": {
             "Fn::Join": [ "", [ "quickstart-aviatrix-", { "Ref": "AWS::Region" } ] ]
           },
-          "S3Key": "scripts/aviatrix_controller.py.zip"
+          "S3Key": "quickstart-aviatrix/scripts/aviatrix_controller.py.zip"
         },
         "KmsKeyArn": {
-          "Fn::GetAtt": [ "AviatrixKey", "Arn" ]
+          "Fn::GetAtt": [ "AVXKey", "Arn" ]
         },
         "Environment": {
           "Variables": {
@@ -364,13 +364,13 @@
               "Ref": "SpokeGWSize"
             },
             "GatewayQueue": {
-              "Fn::GetAtt": ["AviatrixGWQueue", "QueueName"]
+              "Fn::GetAtt": ["AVXGWQueue", "QueueName"]
             },
             "GatewayQueueURL": {
-              "Ref": "AviatrixGWQueue"
+              "Ref": "AVXGWQueue"
             },
             "GatewayTopic": {
-              "Ref": "AviatrixGWTopic"
+              "Ref": "AVXGWTopic"
             },
             "OtherAccount": {
               "Ref": "OtherAccount"
@@ -389,11 +389,22 @@
             }
           }
         },
-        "Runtime": "python2.7",
+        "Runtime": "python3.6",
         "Timeout": "300"
       }
     },
-    "AviatrixGatewayLambda": {
+    "AVXControllerLambdaTrigger": {
+      "Type": "Custom::ControllerLamdbdaTrigger",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "AVXControllerLambda",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "AVXGatewayLambda": {
       "DependsOn": "AVXEIP",
       "Type": "AWS::Lambda::Function",
       "Properties": {
@@ -405,10 +416,10 @@
           "S3Bucket": {
             "Fn::Join": [ "", [ "quickstart-aviatrix-", { "Ref": "AWS::Region" } ] ]
           },
-          "S3Key": "scripts/aviatrix_gateway.py.zip"
+          "S3Key": "quickstart-aviatrix/scripts/aviatrix_gateway.py.zip"
         },
         "KmsKeyArn": {
-          "Fn::GetAtt": [ "AviatrixKey", "Arn" ]
+          "Fn::GetAtt": [ "AVXKey", "Arn" ]
         },
         "Environment": {
           "Variables": {
@@ -438,23 +449,23 @@
               "Ref": "OtherAccountRoleApp"
             },
             "GatewayQueue": {
-              "Fn::GetAtt": ["AviatrixGWQueue", "QueueName"]
+              "Fn::GetAtt": ["AVXGWQueue", "QueueName"]
             },
             "GatewayQueueURL": {
-              "Ref": "AviatrixGWQueue"
+              "Ref": "AVXGWQueue"
             }
           }
         },
-        "Runtime": "python2.7",
+        "Runtime": "python3.6",
         "Timeout": "300"
       }
     },
-    "AviatrixGWTopic": {
+    "AVXGWTopic": {
       "Type": "AWS::SNS::Topic",
       "Properties": {
         "Subscription": [{
           "Endpoint": {
-            "Fn::GetAtt": [ "AviatrixGatewayLambda", "Arn" ]
+            "Fn::GetAtt": [ "AVXGatewayLambda", "Arn" ]
           },
           "Protocol": "lambda"
         }]
@@ -466,14 +477,14 @@
         "Action": "lambda:InvokeFunction",
         "Principal": "sns.amazonaws.com",
         "SourceArn": {
-          "Ref": "AviatrixGWTopic"
+          "Ref": "AVXGWTopic"
         },
         "FunctionName": {
-          "Fn::GetAtt": [ "AviatrixGatewayLambda", "Arn" ]
+          "Fn::GetAtt": [ "AVXGatewayLambda", "Arn" ]
         }
       }
     },
-    "AviatrixPollerLambda": {
+    "AVXPollerLambda": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Handler": "aviatrix_poller.handler",
@@ -484,18 +495,18 @@
           "S3Bucket": {
             "Fn::Join": [ "", [ "quickstart-aviatrix-", { "Ref": "AWS::Region" } ] ]
           },
-          "S3Key": "scripts/aviatrix_poller.py.zip"
+          "S3Key": "quickstart-aviatrix/scripts/aviatrix_poller.py.zip"
         },
         "KmsKeyArn": {
-          "Fn::GetAtt": [ "AviatrixKey", "Arn" ]
+          "Fn::GetAtt": [ "AVXKey", "Arn" ]
         },
         "Environment": {
           "Variables": {
             "GatewayQueue": {
-              "Fn::GetAtt": [ "AviatrixGWQueue", "QueueName" ]
+              "Fn::GetAtt": [ "AVXGWQueue", "QueueName" ]
             },
             "GatewayQueueURL": {
-              "Ref": "AviatrixGWQueue"
+              "Ref": "AVXGWQueue"
             },
             "HubVPC": {
               "Fn::GetAtt" : [ "VPCStack" , "Outputs.VPCID" ]
@@ -510,15 +521,15 @@
               "Ref": "OtherAccountRoleApp"
             },
             "GatewayTopic": {
-              "Ref": "AviatrixGWTopic"
+              "Ref": "AVXGWTopic"
             }
           }
         },
-        "Runtime": "python2.7",
+        "Runtime": "python3.6",
         "Timeout": "300"
       }
     },
-    "AviatrixPollerEvent": {
+    "AVXPollerEvent": {
       "Type": "AWS::Events::Rule",
       "Properties": {
         "Description": "Rule to trigger AviatrixPoller every 2 minutes to find VPCs that need to be attached to the Transit Hub VPC.",
@@ -529,7 +540,7 @@
             "Fn::Join": [ "-", [ { "Ref": "AWS::StackName" }, "Poller-2min" ] ]
           },
           "Arn": {
-            "Fn::GetAtt": [ "AviatrixPollerLambda", "Arn" ]
+            "Fn::GetAtt": [ "AVXPollerLambda", "Arn" ]
           }
         } ]
       }
@@ -538,12 +549,12 @@
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "FunctionName": {
-          "Ref": "AviatrixPollerLambda"
+          "Ref": "AVXPollerLambda"
         },
         "Action": "lambda:InvokeFunction",
         "Principal": "events.amazonaws.com",
         "SourceArn": {
-          "Fn::GetAtt": [ "AviatrixPollerEvent", "Arn" ]
+          "Fn::GetAtt": [ "AVXPollerEvent", "Arn" ]
         }
       }
     }
