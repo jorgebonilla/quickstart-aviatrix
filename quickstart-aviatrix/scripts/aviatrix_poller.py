@@ -7,6 +7,14 @@ lambda_client = boto3.client('lambda')
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+#Read environment Variables
+gatewayqueue = os.environ.get("GatewayQueue")
+vpcid_hub = os.environ.get("HubVPC")
+gwsize_spoke = os.environ.get("SpokeGWSize")
+gatewaytopic = os.environ.get("GatewayTopic")
+spoketag = os.environ.get("SpokeTag")
+OtherAccountRoleApp = os.environ.get("OtherAccountRoleApp")
+
 def find_subnets(ec2,region_id,vpc_id):
     subnets_with_igw=ec2.describe_route_tables(Filters=[
         { 'Name': 'vpc-id', 'Values':[ vpc_id ]},
@@ -36,13 +44,6 @@ def get_credentials(rolearn):
     return assume_role_response
 
 def handler(event, context):
-    #Read environment Variables
-    gatewayqueue = os.environ.get("GatewayQueue")
-    vpcid_hub = os.environ.get("HubVPC")
-    gwsize_spoke = os.environ.get("SpokeGWSize")
-    gatewaytopic = os.environ.get("GatewayTopic")
-    spoketag = os.environ.get("SpokeTag")
-    OtherAccountRoleApp = os.environ.get("OtherAccountRoleApp")
 
     #Gather all the regions:
     ec2=boto3.client('ec2',region_name='us-east-1')

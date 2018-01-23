@@ -1,5 +1,5 @@
 import os, sys, boto3, urllib, ssl, json, logging
-from urllib2 import Request, urlopen, URLError
+from urllib.request import urlopen, URLError
 from time import sleep
 #Needed to load Aviatrix Python API.
 from aviatrix3 import Aviatrix
@@ -15,8 +15,12 @@ username = os.environ.get("Username")
 password = os.environ.get("Password")
 queue_url = os.environ.get("GatewayQueueURL")
 spoketag = os.environ.get("SpokeTag")
-gatewaytopic = event['Records'][0]['EventSubscriptionArn'][:55]
 OtherAccountRoleApp = os.environ.get("OtherAccountRoleApp")
+gatewaytopic = ""
+
+class original_context_class():
+    def __init__(self,original_context):
+        self.log_stream_name=original_context
 
 def tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag, tag):
     ec2.create_tags(Resources = [ vpcid_spoke ], Tags = [ { 'Key': spoketag, 'Value': tag } ])
@@ -57,7 +61,7 @@ def get_credentials(rolearn):
                                               RoleSessionName="aviatrix_poller" )
     return assume_role_response
 
-def deploy_hub(controller,body):
+def deploy_hub(controller,body,gatewaytopic):
     #Variables
     vpcid_hub = body['vpcid_hub']
     region_hub = body['region_hub']
@@ -89,7 +93,9 @@ def deploy_hub(controller,body):
         message['original_context'] = original_context
         #Add New Gateway to SNS
         logger.info('Sending message to create Hub HA GW')
+        logger.info('Message sent: %s: ' % json.dumps(message))
         sns = boto3.client('sns')
+        logger.info("Temp: %s" % gatewaytopic)
         sns.publish(
             TopicArn=gatewaytopic,
             Subject='New Hub HA Gateway',
@@ -104,6 +110,8 @@ def deploy_hub(controller,body):
             "PhysicalResourceId": "arn:aws:fake:myID",
             "Cause" : controller.results
         }
+        original_event=eval(original_event)
+        original_context=original_context_class(original_context)
         cfnresponse.send(original_event, original_context, cfnresponse.FAILURE, responseData)
         sys.exit(1)
 
@@ -114,8 +122,8 @@ def deploy_hub_ha(controller,body):
     subnet_ha = body['subnet_ha']
     subnet_name = body['subnet_name']
     specific_subnet = subnet_ha + "~~" + region_ha + "~~" + subnet_name
-    message['original_event'] = original_event
-    message['original_context'] = original_context
+    original_event = body['original_event']
+    original_context = body['original_context']
     try:
         #Processing
         logger.info('Processing HA Gateway %s.', vpcid_ha)
@@ -126,21 +134,27 @@ def deploy_hub_ha(controller,body):
         sleep(10)
         logger.info('Done with HA Hub Gateway Deployment')
         #responseData
+        logger.info('Sending Message for Cloudformation Custom Resource: CREATE_COMPLETE')
         responseData = {
             "PhysicalResourceId": "arn:aws:fake:myID"
         }
-        cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
+        original_event=eval(original_event)
+        original_context=original_context_class(original_context)
+        cfnresponse.send(original_event, original_context, cfnresponse.SUCCESS, responseData)
     except URLError:
         logger.info('Failed request. Error: %s', controller.results)
         responseData = {
             "PhysicalResourceId": "arn:aws:fake:myID",
             "Cause" : controller.results
         }
+        original_event=eval(original_event)
+        original_context=original_context_class(original_context)
         cfnresponse.send(original_event, original_context, cfnresponse.FAILURE, responseData)
         sys.exit(1)
 
 def handler(event, context):
-
+    #Grab GWtopic from SNS
+    gatewaytopic = event['Records'][0]['EventSubscriptionArn'][:-37]
     # Receive message from SQS queue
     #body=read_queue(queue_url)
     logger.info('Received Message: %s', event)
@@ -152,7 +166,7 @@ def handler(event, context):
         controller.login(username,password)
         #Case Deploy Hub
         if body['action'] == 'deployhub':
-            response = deploy_hub(controller,body)
+            response = deploy_hub(controller,body,gatewaytopic)
         #Case Deploy Hub HA
         elif body['action'] == 'deployhubha':
             response = deploy_hub_ha(controller,body)

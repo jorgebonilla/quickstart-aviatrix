@@ -78,9 +78,9 @@ def controller_account_setup(controller,admin_email,account,aviatrixroleapp,avia
     #Account Setup
     try:
         if other:
-            account_name="AWSAccount"
-        else:
             account_name="AWSOtherAccount"
+        else:
+            account_name="AWSAccount"
         controller.setup_account_profile(account_name,
                                          password,
                                          admin_email,
@@ -139,8 +139,10 @@ def create_handler(event,context):
     message['subnet_hub'] = subnet_hub
     message['subnet_hubHA'] = subnet_hubHA
     message['original_event'] = str(event)
-    message['original_context'] = str(context)
+    message['original_context'] = context.log_stream_name
     logger.info('Creating Hub VPC %s. Sending SQS message', message['vpcid_hub'])
+    logger.info('Message sent: %s: ' % json.dumps(message))
+
     sns = boto3.client('sns')
     sns.publish(
         TopicArn=gatewaytopic,
