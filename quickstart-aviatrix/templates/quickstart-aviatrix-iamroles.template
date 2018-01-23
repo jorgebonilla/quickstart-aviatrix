@@ -301,8 +301,7 @@
   							"logs:PutLogEvents",
   							"ec2:Describe*",
   							"ec2:CreateTags",
-  							"SQS:*",
-  							"SNS:*",
+  							"SNS:Publish",
   							"STS:AssumeRole"
   						],
   						"Resource": "*"
