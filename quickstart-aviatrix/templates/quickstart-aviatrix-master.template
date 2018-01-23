@@ -285,7 +285,7 @@
               "Effect": "Allow",
               "Principal": {
                 "AWS": [
-                  { "Fn::Join": [ "", [ "arn:aws:iam::", { "Ref": "AWS::AccountId" }, ":role/service-role/aviatrix-role-api" ] ] }
+                  { "Fn::Join": [ "", [ "arn:aws:iam::", { "Ref": "AWS::AccountId" }, ":role/aviatrix-role-api" ] ] }
                 ]
               },
               "Action": [
@@ -310,7 +310,7 @@
       "Properties": {
         "Handler": "aviatrix_controller.handler",
         "Role": {
-          "Fn::Join": [ "", [ "arn:aws:iam::", { "Ref": "AWS::AccountId" }, ":role/service-role/aviatrix-role-api" ] ]
+          "Fn::Join": [ "", [ "arn:aws:iam::", { "Ref": "AWS::AccountId" }, ":role/aviatrix-role-api" ] ]
         },
         "Code": {
           "S3Bucket": {
@@ -410,7 +410,7 @@
       "Properties": {
         "Handler": "aviatrix_gateway.handler",
         "Role": {
-          "Fn::Join": [ "", [ "arn:aws:iam::", { "Ref": "AWS::AccountId" }, ":role/service-role/aviatrix-role-api" ] ]
+          "Fn::Join": [ "", [ "arn:aws:iam::", { "Ref": "AWS::AccountId" }, ":role/aviatrix-role-api" ] ]
         },
         "Code": {
           "S3Bucket": {
@@ -489,7 +489,7 @@
       "Properties": {
         "Handler": "aviatrix_poller.handler",
         "Role": {
-          "Fn::Join": [ "", [ "arn:aws:iam::", { "Ref": "AWS::AccountId" }, ":role/service-role/aviatrix-role-api" ] ]
+          "Fn::Join": [ "", [ "arn:aws:iam::", { "Ref": "AWS::AccountId" }, ":role/aviatrix-role-api" ] ]
         },
         "Code": {
           "S3Bucket": {

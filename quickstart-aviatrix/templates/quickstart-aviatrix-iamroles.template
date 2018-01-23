@@ -71,7 +71,7 @@
   						"Action": ["sts:AssumeRole"]
   					}]
   				},
-  				"Path": "/service-role/"
+  				"Path": "/"
   			}
       },
       "CreateAviatrixAssumeRolePolicy" : {
@@ -290,7 +290,7 @@
         "Properties": {
   				"ManagedPolicyName": "aviatrix-api-role-policy",
   				"Description": "Policy for creating aviatrix-api-role-policy",
-  				"Path": "/service-role/",
+  				"Path": "/",
   				"PolicyDocument": {
   					"Version": "2012-10-17",
   					"Statement": [{
