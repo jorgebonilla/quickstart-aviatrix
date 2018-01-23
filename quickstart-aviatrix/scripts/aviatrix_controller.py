@@ -118,13 +118,27 @@ def controller_setup_license(controller,licensemodel,license):
                 'Error' : controller.results
             }
 
+def controller_login(controller_ip,username,password):
+    try:
+        controller = Aviatrix(controller_ip)
+        controller.login(username,password)
+        return controller
+    except URLError:
+        logger.info('Failed request. Error: %s', controller.results)
+        return {
+            'Status' : 'FAILURE',
+            'Error' : controller.results
+        }
+
 def create_handler(event,context):
     #Initialize the Aviatrix Controller
     response=controller_initialize(controller_ip,username,private_ip,password,admin_email,True)
-    controller=response['Controller']
+    #Relogin to controller
+    controller = controller_login(controller_ip,username,password)
     #Setup License
     response = controller_setup_license(controller,licensemodel,license)
     #Setup Accounts
+    controller = controller_login(controller_ip,username,password)
     response = controller_account_setup(controller,admin_email,account,aviatrixroleapp,aviatrixroleec2,False)
     if otheraccount != "":
         other_response=controller_account_setup(controller,admin_email,otheraccount,otheraccountroleapp,otheraccountroleec2,True)
