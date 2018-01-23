@@ -153,21 +153,22 @@
   },
   "Mappings" : {
     "RegionMap" : {
-      "us-east-1" : { "LicenseIncluded" : "ami-84aaf3fe",  "BYOL": "ami-84aaf3fe" },
-      "us-east-2" : { "LicenseIncluded" : "ami-b182a9d4",  "BYOL": "ami-b182a9d4" },
-      "us-west-1" : { "LicenseIncluded" : "ami-5da9a93d",  "BYOL": "ami-5da9a93d" },
-      "us-west-2" : { "LicenseIncluded" : "ami-af0ebad7",  "BYOL": "ami-af0ebad7" },
-      "ca-central-1" : { "LicenseIncluded" : "ami-908702f4",  "BYOL": "ami-908702f4" },
-      "eu-central-1" : { "LicenseIncluded" : "ami-d44edcbb",  "BYOL": "ami-d44edcbb" },
-      "eu-west-1" : { "LicenseIncluded" : "ami-beaa39c7",  "BYOL": "ami-beaa39c7" },
-      "eu-west-2" : { "LicenseIncluded" : "ami-02b7af66",  "BYOL": "ami-02b7af66" },
+      "us-east-1" : { "LicenseIncluded" : "ami-855463ff",  "BYOL": "ami-855463ff" },
+      "us-east-2" : { "LicenseIncluded" : "ami-9db399f8",  "BYOL": "ami-9db399f8" },
+      "us-west-1" : { "LicenseIncluded" : "ami-ee1b168e",  "BYOL": "ami-ee1b168e" },
+      "us-west-2" : { "LicenseIncluded" : "	ami-baea56c2",  "BYOL": "	ami-baea56c2" },
+      "ca-central-1" : { "LicenseIncluded" : "ami-a90184cd",  "BYOL": "ami-a90184cd" },
+      "eu-central-1" : { "LicenseIncluded" : "ami-49c05926",  "BYOL": "ami-49c05926" },
+      "eu-west-1" : { "LicenseIncluded" : "ami-5c99fc25",  "BYOL": "ami-5c99fc25" },
+      "eu-west-2" : { "LicenseIncluded" : "ami-c6b7aca2",  "BYOL": "ami-c6b7aca2" },
       "eu-west-3" : { "LicenseIncluded" : "ami-4000b73d",  "BYOL": "ami-4000b73d" },
-      "ap-southeast-1" : { "LicenseIncluded" : "ami-b65122ca",  "BYOL": "ami-b65122ca" },
-      "ap-southeast-2" : { "LicenseIncluded" : "ami-58e01d3a",  "BYOL": "ami-58e01d3a" },
-      "ap-northeast-1" : { "LicenseIncluded" : "ami-75ec7413",  "BYOL": "ami-75ec7413" },
-      "ap-northeast-2" : { "LicenseIncluded" : "ami-1596367b",  "BYOL": "ami-1596367b" },
-      "sa-east-1" : { "LicenseIncluded" : "ami-e94c0e85",  "BYOL": "ami-e94c0e85" },
-      "ap-south-1" : { "LicenseIncluded" : "ami-18194e77",  "BYOL": "ami-18194e77" }
+      "ap-southeast-1" : { "LicenseIncluded" : "ami-1cfd8460",  "BYOL": "ami-1cfd8460" },
+      "ap-southeast-2" : { "LicenseIncluded" : "ami-618f7103",  "BYOL": "ami-618f7103" },
+      "ap-northeast-2" : { "LicenseIncluded" : "ami-fdae0d93",  "BYOL": "ami-fdae0d93" },
+      "ap-northeast-1" : { "LicenseIncluded" : "ami-d10163b7",  "BYOL": "ami-d10163b7" },
+      "ap-south-1" : { "LicenseIncluded" : "ami-b65203d9",  "BYOL": "ami-b65203d9" },
+      "sa-east-1" : { "LicenseIncluded" : "ami-ba1c50d6",  "BYOL": "ami-ba1c50d6" }
+
     }
   },
   "Resources" : {
