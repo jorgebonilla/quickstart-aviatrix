@@ -26,9 +26,6 @@ def tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag, tag):
     ec2.create_tags(Resources = [ vpcid_spoke ], Tags = [ { 'Key': spoketag, 'Value': tag } ])
 
 def find_other_spokes(ec2,vpc_pairs,existing_spokes):
-    ogger.info('ec2: %s' % ec2)
-    logger.info('Pairs: %s' % vpc_pairs)
-    logger.info('Existing spokes: %s' % existing_spokes)
     regions=ec2.describe_regions()
     if vpc_pairs:
         for region in regions['Regions']:
@@ -243,6 +240,11 @@ def deploy_gw_ha(controller,body,gatewaytopic):
     vpcid_hub = body['vpcid_hub']
     vpc_cidr_spoke = body['vpc_cidr_spoke']
     specific_subnet = subnet_ha + "~~" + region_ha + "~~" + subnet_name
+    #Get the right account
+    result= get_aws_session(body,vpcid_spoke)
+    ec2=result['ec2']
+    awsaccount=result['awsaccount']
+    logger.info('AWS Account: %s' % awsaccount)
     #Processing
     logger.info('Processing HA Gateway %s.', vpcid_ha)
     #HA Gateway Creation
