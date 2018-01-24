@@ -181,7 +181,7 @@ def handler(event, context):
                 #Create Gateway for it and Peer, when done change the Tag:spoketag = peered
                 vpcs=ec2.describe_vpcs(Filters=[
                     { 'Name': 'state', 'Values': [ 'available' ] },
-                    { 'Name': 'tag:'+spoketag, 'Values': [ 'true', 'True', 'TRUE', 'test' ] }
+                    { 'Name': 'tag:'+spoketag, 'Values': [ 'true', 'True', 'TRUE' ] }
                 ])
                 for vpc_peering in vpcs['Vpcs']:
                     message = {}
