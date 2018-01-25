@@ -54,26 +54,6 @@
            "Path": "/"
          }
       },
-      "AviatrixRoleAPI": {
-        "Type": "AWS::IAM::Role",
-        "Properties": {
-  				"RoleName": "aviatrix-role-api",
-  				"AssumeRolePolicyDocument": {
-  					"Version": "2012-10-17",
-  					"Statement": [{
-  						"Effect": "Allow",
-  						"Principal": {
-  							"Service": [
-  								"lambda.amazonaws.com",
-  								"edgelambda.amazonaws.com"
-  							]
-  						},
-  						"Action": ["sts:AssumeRole"]
-  					}]
-  				},
-  				"Path": "/"
-  			}
-      },
       "CreateAviatrixAssumeRolePolicy" : {
         "Type" : "AWS::IAM::ManagedPolicy",
         "Properties" :
@@ -285,34 +265,7 @@
           } ]
         }
       },
-  		"AviatrixAPIRolePolicy": {
-        "Type": "AWS::IAM::ManagedPolicy",
-        "Properties": {
-  				"ManagedPolicyName": "aviatrix-api-role-policy",
-  				"Description": "Policy for creating aviatrix-api-role-policy",
-  				"Path": "/",
-  				"PolicyDocument": {
-  					"Version": "2012-10-17",
-  					"Statement": [{
-  						"Effect": "Allow",
-  						"Action": [
-  							"logs:CreateLogGroup",
-  							"logs:CreateLogStream",
-  							"logs:PutLogEvents",
-  							"ec2:Describe*",
-  							"ec2:CreateTags",
-  							"SNS:Publish",
-  							"STS:AssumeRole"
-  						],
-  						"Resource": "*"
-  					}]
-  				},
-  				"Roles": [{
-  					"Ref": "AviatrixRoleAPI"
-  				}]
-  			}
-  		},
-      "AviatrixInstanceProfile": {
+  		"AviatrixInstanceProfile": {
         "Type": "AWS::IAM::InstanceProfile",
         "Properties": {
           "InstanceProfileName": "aviatrix-role-ec2",
