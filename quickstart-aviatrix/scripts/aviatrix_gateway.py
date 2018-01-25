@@ -323,7 +323,7 @@ def create_peering(controller,body):
         #get the list of existing Spokes
         controller.list_peers_vpc_pairs()
         found_pairs = controller.results
-        if otheraccount:
+        if OtherAccountRoleApp:
             other_credentials = get_credentials(OtherAccountRoleApp)
             existing_spokes = find_other_spokes(found_pairs,other_credentials)
         else:
@@ -370,7 +370,7 @@ def delete_gw(controller,body):
         #get the list of existing Spokes
         controller.list_peers_vpc_pairs()
         found_pairs = controller.results
-        if otheraccount:
+        if OtherAccountRoleApp:
             other_credentials = get_credentials(OtherAccountRoleApp)
             existing_spokes = find_other_spokes(found_pairs,other_credentials)
         else:
