@@ -90,7 +90,7 @@
       "AllowedValues" : [ "LicenseIncluded", "BYOL" ]
     },
     "License": {
-      "Description" : "(Required, only if using BYOL License Model) If you don't have one, please contact sales@aviatrix.com. For LicenseIncluded leave BLANK",
+      "Description" : "If you don't have one, please contact sales@aviatrix.com. For LicenseIncluded leave BLANK",
       "Type" : "String"
     },
     "HubGWSize": {
@@ -263,7 +263,55 @@
       }
     },
 
+    "AVXRoleAPI": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": {
+              "Service": [
+                "lambda.amazonaws.com",
+                "edgelambda.amazonaws.com"
+              ]
+            },
+            "Action": ["sts:AssumeRole"]
+          }]
+        },
+        "Path": "/"
+      }
+    },
+    "AVXAPIRolePolicy": {
+      "DependsOn": [ "AVXRoleAPI" ],
+      "Type": "AWS::IAM::ManagedPolicy",
+      "Properties": {
+        "Description": "Policy for creating aviatrix-api-role-policy",
+        "Path": "/",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Action": [
+              "logs:CreateLogGroup",
+              "logs:CreateLogStream",
+              "logs:PutLogEvents",
+              "ec2:Describe*",
+              "ec2:CreateTags",
+              "SNS:Publish",
+              "STS:AssumeRole"
+            ],
+            "Resource": "*"
+          }]
+        },
+        "Roles": [{
+          "Ref": "AVXRoleAPI"
+        }]
+      }
+    },
+
     "AVXKey": {
+      "DependsOn": "AVXRoleAPI",
       "Type": "AWS::KMS::Key",
       "Properties": {
         "Description": "Key to encrypt Aviatrix Data",
@@ -286,7 +334,7 @@
               "Effect": "Allow",
               "Principal": {
                 "AWS": [
-                  { "Fn::Join": [ "", [ "arn:aws:iam::", { "Ref": "AWS::AccountId" }, ":role/aviatrix-role-api" ] ] }
+                  { "Fn::GetAtt": [ "AVXRoleAPI", "Arn" ] }
                 ]
               },
               "Action": [
@@ -311,7 +359,7 @@
       "Properties": {
         "Handler": "aviatrix_controller.handler",
         "Role": {
-          "Fn::Join": [ "", [ "arn:aws:iam::", { "Ref": "AWS::AccountId" }, ":role/aviatrix-role-api" ] ]
+          "Fn::GetAtt": [ "AVXRoleAPI", "Arn" ]
         },
         "Code": {
           "S3Bucket": {
@@ -411,7 +459,7 @@
       "Properties": {
         "Handler": "aviatrix_gateway.handler",
         "Role": {
-          "Fn::Join": [ "", [ "arn:aws:iam::", { "Ref": "AWS::AccountId" }, ":role/aviatrix-role-api" ] ]
+          "Fn::GetAtt": [ "AVXRoleAPI", "Arn" ]
         },
         "Code": {
           "S3Bucket": {
@@ -490,7 +538,7 @@
       "Properties": {
         "Handler": "aviatrix_poller.handler",
         "Role": {
-          "Fn::Join": [ "", [ "arn:aws:iam::", { "Ref": "AWS::AccountId" }, ":role/aviatrix-role-api" ] ]
+          "Fn::GetAtt": [ "AVXRoleAPI", "Arn" ]
         },
         "Code": {
           "S3Bucket": {

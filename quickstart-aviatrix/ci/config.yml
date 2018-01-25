@@ -5,7 +5,6 @@ global:
   regions:
     - us-east-1
   reporting: true
-
 tests:
   quickstart-aviatrix-master:
     parameter_input: quickstart-aviatrix-master-params.json

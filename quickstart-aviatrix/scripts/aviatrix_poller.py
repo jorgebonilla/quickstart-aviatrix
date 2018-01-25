@@ -115,6 +115,9 @@ def handler(event, context):
             message['region_spoke'] = region_id
             message['gwsize_spoke'] = gwsize_spoke
             message['vpcid_hub'] = vpcid_hub
+            message['primary_account'] = True
+            if OtherAccountRoleApp:
+                message['otheraccount'] = True
             #Finding the Public Subnet
             try:
 
@@ -152,6 +155,9 @@ def handler(event, context):
             message['region_spoke'] = region_id
             message['gwsize_spoke'] = gwsize_spoke
             message['vpcid_hub'] = vpcid_hub
+            message['primary_account'] = True
+            if OtherAccountRoleApp:
+                message['otheraccount'] = True
             logger.info('Found VPC %s waiting to be unpeered. Sending SQS message to Queue %s' % (message['vpcid_spoke'],gatewayqueue))
             #Add New Gateway to SQS
             #sqs = boto3.resource('sqs')
@@ -190,6 +196,7 @@ def handler(event, context):
                     message['region_spoke'] = region_id
                     message['gwsize_spoke'] = gwsize_spoke
                     message['vpcid_hub'] = vpcid_hub
+                    message['primary_account'] = False
                     message['otheraccount'] = True
 
                     #Finding the Public Subnet
@@ -229,6 +236,7 @@ def handler(event, context):
                     message['gwsize_spoke'] = gwsize_spoke
                     message['vpcid_hub'] = vpcid_hub
                     message['otheraccount'] = True
+                    message['primary_account'] = False
                     logger.info('Found VPC %s waiting to be unpeered. Sending SQS message to Queue %s' % (message['vpcid_spoke'],gatewayqueue))
                     #Add New Gateway to SQS
                     #sqs = boto3.resource('sqs')

@@ -25,11 +25,15 @@ class original_context_class():
 def tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag, tag):
     ec2.create_tags(Resources = [ vpcid_spoke ], Tags = [ { 'Key': spoketag, 'Value': tag } ])
 
-def find_other_spokes(ec2,vpc_pairs,existing_spokes):
+def find_other_spokes(vpc_pairs,other_credentials=""):
+    ec2 = boto3.client('ec2',region_name='us-east-1')
     regions=ec2.describe_regions()
+    existing_spokes=[]
     if vpc_pairs:
         for region in regions['Regions']:
             region_id=region['RegionName']
+            #Find spokes in primary account
+            ec2=create_aws_session(region_id)
             for vpc_name in vpc_pairs['pair_list']:
                 vpc_name_temp = {}
                 vpc_name_temp['vpc_name'] = vpc_name['vpc_name2']
@@ -39,38 +43,54 @@ def find_other_spokes(ec2,vpc_pairs,existing_spokes):
                 if vpc_info['Vpcs']:
                     vpc_name_temp['subnet'] = vpc_info['Vpcs'][0]['CidrBlock']
                     existing_spokes.append(vpc_name_temp)
+            #Find Spokes in Secondary account if otheraccount=TRUE
+            if other_credentials != "":
+                ec2=create_aws_session(region_id,other_credentials)
+                for vpc_name in vpc_pairs['pair_list']:
+                    vpc_name_temp = {}
+                    vpc_name_temp['vpc_name'] = vpc_name['vpc_name2']
+                    vpc_info=ec2.describe_vpcs(Filters=[
+                        { 'Name': 'vpc-id', 'Values':[ vpc_name['vpc_name2'][6:] ]}
+                        ])
+                    if vpc_info['Vpcs']:
+                        vpc_name_temp['subnet'] = vpc_info['Vpcs'][0]['CidrBlock']
+                        existing_spokes.append(vpc_name_temp)
     return existing_spokes
 
-def test_find_other_spokes():
-    test_vpc_pairs = {
-                        "pair_list": [
-                            {
-                                "vpc_name2": "spoke-vpc-7a169913",
-                                "vpc_name1": "hub-vpc-7c246404",
-                                "peering_link": ""
-                            }
-                        ]
-                    }
-    assert find_other_spokes(test_vpc_pairs) == [{'subnet': '172.31.0.0/16', 'vpc_name': 'spoke-vpc-7a169913'}]
-
-def get_aws_session(body,region_spoke):
-    try:
-        otheraccount = body['otheraccount']
-        awsaccount = "AWSOtherAccount"
-    except KeyError:
-        awsaccount = "AWSAccount"
-    if awsaccount == "AWSOtherAccount":
-        other_credentials = get_credentials(OtherAccountRoleApp)
-        region_id=region_spoke
+def create_aws_session(region_id,other_credentials=""):
+    if other_credentials != "":
         ec2=boto3.client('ec2',
                          region_name=region_id,
                          aws_access_key_id=other_credentials['Credentials']['AccessKeyId'],
                          aws_secret_access_key=other_credentials['Credentials']['SecretAccessKey'],
                          aws_session_token=other_credentials['Credentials']['SessionToken'] )
-    elif awsaccount == "AWSAccount":
-        ec2=boto3.client('ec2',region_name=region_spoke)
+
+    else:
+        ec2=boto3.client('ec2',region_name=region_id)
+    return ec2
+
+def get_aws_session(body,region_spoke):
+    primary_account = body['primary_account']
+    try:
+        otheraccount = body['otheraccount']
+        if primary_account:
+            awsaccount = "AWSAccount"
+            other_credentials = ""
+        else:
+            awsaccount = "AWSOtherAccount"
+            other_credentials = get_credentials(OtherAccountRoleApp)
+        region_id=region_spoke
+    except KeyError:
+        otheraccount = False
+        awsaccount = "AWSAccount"
+        other_credentials=""
+        region_id=region_spoke
+
+    ec2=create_aws_session(region_id,other_credentials)
     return { 'ec2': ec2,
-             'awsaccount': awsaccount
+             'awsaccount': awsaccount,
+             'otheraccount': otheraccount,
+             'primary_account': primary_account
     }
 
 def get_credentials(rolearn):
@@ -185,6 +205,7 @@ def deploy_gw (controller,body,gatewaytopic):
     result= get_aws_session(body,region_spoke)
     ec2=result['ec2']
     awsaccount=result['awsaccount']
+    primary_account = result['primary_account']
     #Processing
     logger.info('Processing VPC %s. Updating tag:%s to processing' % (vpcid_spoke, spoketag))
     tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'processing')
@@ -210,9 +231,9 @@ def deploy_gw (controller,body,gatewaytopic):
         message['vpcid_spoke'] = vpcid_spoke
         message['vpcid_hub'] = vpcid_hub
         message['vpc_cidr_spoke'] = vpc_cidr_spoke
+        message['primary_account'] = primary_account
         if awsaccount == 'AWSOtherAccount':
             message['otheraccount'] = True
-
         #Add New Gateway to SNS
         sns = boto3.client('sns')
         sns.publish(
@@ -244,6 +265,7 @@ def deploy_gw_ha(controller,body,gatewaytopic):
     result= get_aws_session(body,vpcid_spoke)
     ec2=result['ec2']
     awsaccount=result['awsaccount']
+    primary_account = result['primary_account']
     logger.info('AWS Account: %s' % awsaccount)
     #Processing
     logger.info('Processing HA Gateway %s.', vpcid_ha)
@@ -261,6 +283,7 @@ def deploy_gw_ha(controller,body,gatewaytopic):
         message['vpcid_spoke'] = vpcid_spoke
         message['vpcid_hub'] = vpcid_hub
         message['vpc_cidr_spoke'] = vpc_cidr_spoke
+        message['primary_account'] = primary_account
         if awsaccount == 'AWSOtherAccount':
             message['otheraccount'] = True
         #Add New Gateway to SNS
@@ -281,7 +304,6 @@ def deploy_gw_ha(controller,body,gatewaytopic):
             'Error' : controller.results
         }
 
-
 def create_peering(controller,body):
     #Variables
     vpcid_spoke = body['vpcid_spoke']
@@ -290,8 +312,9 @@ def create_peering(controller,body):
     vpc_cidr_spoke = body['vpc_cidr_spoke']
     #Get the right account
     result= get_aws_session(body,region_spoke)
-    ec2=result['ec2']
-    awsaccount=result['awsaccount']
+    ec2 = result['ec2']
+    awsaccount = result['awsaccount']
+    otheraccount = result['otheraccount']
     logger.info('AWS Account: %s' % awsaccount)
     try:
         #Peering Hub/Spoke
@@ -300,12 +323,11 @@ def create_peering(controller,body):
         #get the list of existing Spokes
         controller.list_peers_vpc_pairs()
         found_pairs = controller.results
-        #Find the CIDRs of existing peerings on Primary/Secondary Account
-        existing_spokes = find_other_spokes(ec2,found_pairs,[])
-        #Find the CIDRs of existing peerings on Primary Account (in case current spoke is secondary)
-        if awsaccount == "AWSOtherAccount":
-            ec2_primary=boto3.client('ec2',region_name=region_spoke)
-            existing_spokes = find_other_spokes(ec2_primary,found_pairs,existing_spokes)
+        if otheraccount:
+            other_credentials = get_credentials(OtherAccountRoleApp)
+            existing_spokes = find_other_spokes(found_pairs,other_credentials)
+        else:
+            existing_spokes = find_other_spokes(found_pairs)
         #Creating the transitive connections
         logger.info('Creating Transitive routes, Data: %s' % existing_spokes)
         if existing_spokes:
@@ -340,6 +362,7 @@ def delete_gw(controller,body):
     result = get_aws_session(body,region_spoke)
     ec2 = result['ec2']
     awsaccount = result['awsaccount']
+    otheraccount = result['otheraccount']
     #Processing
     logger.info('Processing unpeer of VPC %s. Updating tag:%s to processing' %  (vpcid_spoke,spoketag))
     tag_spoke(ec2,region_spoke,vpcid_spoke,spoketag,'processing')
@@ -347,12 +370,11 @@ def delete_gw(controller,body):
         #get the list of existing Spokes
         controller.list_peers_vpc_pairs()
         found_pairs = controller.results
-        #Find the CIDRs of existing peerings on Primary/Secondary Account
-        existing_spokes = find_other_spokes(ec2,found_pairs,[])
-        #Find the CIDRs of existing peerings on Primary Account (in case current spoke is secondary)
-        if awsaccount == "AWSOtherAccount":
-            ec2_primary=boto3.client('ec2',region_name=region_spoke)
-            existing_spokes = find_other_spokes(ec2_primary,found_pairs,existing_spokes)
+        if otheraccount:
+            other_credentials = get_credentials(OtherAccountRoleApp)
+            existing_spokes = find_other_spokes(found_pairs,other_credentials)
+        else:
+            existing_spokes = find_other_spokes(found_pairs)
         #Delete Transitive routes
         if existing_spokes:
             for existing_spoke in existing_spokes:
