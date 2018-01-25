@@ -19,7 +19,7 @@ class Aviatrix:
             value = quote(value, safe='')
             url = url + "&%s=%s" % (key,value)
         self.url = url
-        logging.info("Executing API call:%s" % self.url)
+        logging.info("aviatrix3.py - Executing API call:%s" % self.url)
         try:
             if method == "POST":
                 data = urllib.parse.urlencode(parameters).encode("utf-8")
@@ -27,14 +27,15 @@ class Aviatrix:
             else:
                 response = urlopen(self.url, context=self.ctx).read().decode('utf8')
             json_response = response
-            logging.info("HTTP Response: %s" % json_response)
+            logging.info("aviatrix3.py - HTTP Response: %s" % json_response)
             self.result = json.loads(json_response)
             if self.result['return'] == False:
                 self.results = self.result['reason']
             else:
                 self.results = self.result['results']
         except URLError as e:
-            logging.info('Failed request. URLError: %s', str(e.reason))
+            logging.info('aviatrix3.py - Failed request. URLError: %s', str(e.reason))
+            raise
 
     def login(self,username,password):
         self.avx_api_call("GET","login",{ "username": username,
@@ -43,7 +44,7 @@ class Aviatrix:
             if self.result['return'] == True:
                 self.CID = self.result['CID']
         except AttributeError as e:
-            logging.info('Login Request Failed. AttributeError: %s', str(e))
+            logging.info('aviatrix3.py - Login Request Failed. AttributeError: %s', str(e))
 
     def admin_email(self,email):
         self.avx_api_call("GET","add_admin_email_addr", { "CID": self.CID,
@@ -63,7 +64,7 @@ class Aviatrix:
                 if self.result['return'] == True:
                     sleep(self.result['results'])
         except AttributeError:
-            logging.info('Seems like we weren\'t able to connect to the controller, please check Controller information')
+            logging.info('aviatrix3.py - Seems like we weren\'t able to connect to the controller, please check Controller information')
     def setup_account_profile(self,account,password,email,cloud_type,aws_account_number,aws_role_arn,aws_role_ec2):
         self.avx_api_call("POST","setup_account_profile", { "CID": self.CID,
                                                             "account_name": account,
