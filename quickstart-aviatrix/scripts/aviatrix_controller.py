@@ -50,29 +50,56 @@ def send_usage_info(url,data):
     except URLError:
         return "Couldn't send out Usage Data"
 
-def controller_initialize(controller_ip,username,private_ip,password,admin_email,upgrade=False):
-    #Start the Controller Initialization process
+def controller_login_first_time(controller_ip,username,private_ip,counter=1):
+    logger.info('aviatrix-controller.py - Login in for First time. Attempt#:%s' % counter)
     try:
-        controller = Aviatrix(controller_ip)
-        controller.login(username,private_ip)
+        if counter <=2:
+            controller = Aviatrix(controller_ip)
+            controller.login(username,private_ip)
+            logger.info('aviatrix-controller.py - Login in for First time. SUCCESS')
+            return {
+                'Status' : 'SUCCESS',
+                'Controller' : controller
+            }
+        else:
+            logger.info('aviatrix-controller.py - Login in for First time. FAILURE')
+            responseData = {
+                "PhysicalResourceId": "arn:aws:fake:myID",
+                "Cause" : controller.results
+            }
+            cfnresponse.send(event, context, cfnresponse.FAILURE, responseData)
+            raise Exception('Failure to connect to controller after %s attempts' % counter)
+    except URLError:
+        if counter <= 2:
+            logger.info('aviatrix-controller.py - FTL - Failed request - Retrying in 30s')
+            time.sleep(30)
+            counter += 1
+            controller_login_first_time(controller_ip,username,private_ip,counter)
+
+def controller_initialize(controller_ip,username,private_ip,password,admin_email,upgrade=False):
+    logger.info('aviatrix-controller.py - Controller initialization Begins')
+    #Start the Controller Initialization process
+    response = controller_login_first_time(controller_ip,username,private_ip)
+    controller = response['Controller']
+    try:
         controller.admin_email(admin_email)
         controller.change_password(username,username,private_ip,password)
         controller.login(username,password)
         if upgrade:
             controller.initial_setup("run")
-        logger.info('Done with Initial Controller Setup')
+        logger.info('aviatrix-controller.py - Done with Initial Controller Setup')
         return {
             'Status' : 'SUCCESS',
             'Controller' : controller
         }
     except URLError:
-        logger.info('Failed request. Error: %s', controller.results)
+        logger.info('aviatrix-controller.py - Failed request. Error: %s', controller.results)
         responseData = {
             "PhysicalResourceId": "arn:aws:fake:myID",
             "Cause" : controller.results
         }
         cfnresponse.send(event, context, cfnresponse.FAILURE, responseData)
-        sys.exit(1)
+        raise Exception('Failure initializing Controller')
 
 def controller_account_setup(controller,admin_email,account,aviatrixroleapp,aviatrixroleec2,other=False):
     #Account Setup
@@ -88,31 +115,31 @@ def controller_account_setup(controller,admin_email,account,aviatrixroleapp,avia
                                          account,
                                          aviatrixroleapp,
                                          aviatrixroleec2)
-        logger.info('Done with Setting up %s' % account_name)
+        logger.info('aviatrix-controller.py - Done with Setting up %s' % account_name)
         return {
             'Status' : 'SUCCESS'
         }
     except URLError:
-        logger.info('Failed request. Error: %s', controller.results)
+        logger.info('aviatrix-controller.py - Failed request. Error: %s', controller.results)
         responseData = {
             "PhysicalResourceId": "arn:aws:fake:myID",
             "Cause" : controller.results
         }
         cfnresponse.send(event, context, cfnresponse.FAILURE, responseData)
-        sys.exit(1)
+        raise Exception('Failure setting up accounts on Controller')
 
 def controller_setup_license(controller,licensemodel,license):
     #License Setup
     if licensemodel == "BYOL":
-        logger.info('Setting up License ')
+        logger.info('aviatrix-controller.py - Setting up License ')
         try:
             controller.setup_customer_id(license)
-            logger.info('Done with License Setup')
+            logger.info('aviatrix-controller.py - Done with License Setup')
             return {
                 'Status' : 'SUCCESS'
             }
         except URLError:
-            logger.info('Failed request. Error: %s', controller.results)
+            logger.info('aviatrix-controller.py - Failed request. Error: %s', controller.results)
             return {
                 'Status' : 'FAILURE',
                 'Error' : controller.results
@@ -124,7 +151,7 @@ def controller_login(controller_ip,username,password):
         controller.login(username,password)
         return controller
     except URLError:
-        logger.info('Failed request. Error: %s', controller.results)
+        logger.info('aviatrix-controller.py - Failed request. Error: %s', controller.results)
         return {
             'Status' : 'FAILURE',
             'Error' : controller.results
@@ -142,7 +169,7 @@ def create_handler(event,context):
     response = controller_account_setup(controller,admin_email,account,aviatrixroleapp,aviatrixroleec2,False)
     if otheraccount != "":
         other_response=controller_account_setup(controller,admin_email,otheraccount,otheraccountroleapp,otheraccountroleec2,True)
-    logger.info('Done with Controller Setup')
+    logger.info('aviatrix-controller.py - Done with Controller Setup')
 
     #Gather necessary info to deploy Hub GW
     message = {}
@@ -154,8 +181,8 @@ def create_handler(event,context):
     message['subnet_hubHA'] = subnet_hubHA
     message['original_event'] = str(event)
     message['original_context'] = context.log_stream_name
-    logger.info('Creating Hub VPC %s. Sending SQS message', message['vpcid_hub'])
-    logger.info('Message sent: %s: ' % json.dumps(message))
+    logger.info('aviatrix-controller.py - Creating Hub VPC %s. Sending SQS message', message['vpcid_hub'])
+    logger.info('aviatrix-controller.py - Message sent: %s: ' % json.dumps(message))
 
     sns = boto3.client('sns')
     sns.publish(
@@ -172,27 +199,27 @@ def create_handler(event,context):
 def delete_handler(event, context):
     #Delete all tunnels and gateways
     try:
-        logger.info('Starting with decomission of Controller')
+        logger.info('aviatrix-controller.py - Starting with decomission of Controller')
         controller = Aviatrix(controller_ip)
         controller.login(username,password)
         controller.list_peers_vpc_pairs()
         tunnels=controller.results
         if tunnels:
-            logger.info('Deleting existing tunnels')
+            logger.info('aviatrix-controller.py - Deleting existing tunnels')
             #To be done
             #for tunnel in tunnels delete each one.
         controller.list_vpcs_summary("admin")
         gateways=controller.results
         if gateways:
             for gateway in gateways:
-                logger.info('Deleting gateway %s', gateway['vpc_name'])
+                logger.info('aviatrix-controller.py - Deleting gateway %s', gateway['vpc_name'])
                 controller.delete_gateway('1',gateway['vpc_name'])
         responseData = {
             "PhysicalResourceId": "arn:aws:fake:myID"
         }
         cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
     except URLError:
-        logger.info('Failed request. Error: %s', controller.results)
+        logger.info('aviatrix-controller.py - Failed request. Error: %s', controller.results)
         return {
             'Status' : 'FAILURE',
             'Error' : controller.results

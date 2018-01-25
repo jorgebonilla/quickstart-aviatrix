@@ -6,7 +6,7 @@ phases:
       - apt-get update
       - apt-get install -y zip curl
       - pip install -r requirements.txt
-      - curl -s https://raw.githubusercontent.com/aws-quickstart/taskcat/master/installer/pip/pip3-install-master| python -E
+      # - curl -s https://raw.githubusercontent.com/aws-quickstart/taskcat/master/installer/pip/pip3-install-master| python -E
       # - aws cloudformation create-stack --stack-name AVX-IAM --template-body quickstart-aviatrix/templates/quickstart-aviatrix-iamroles.template --parameters ParentAccountID=""
   build:
     commands:
@@ -19,7 +19,7 @@ phases:
       - echo Run Unittest
       - python -m unittest discover quickstart-aviatrix/scripts
       - echo Running taskcat
-      - taskcat -c quickstart-aviatrix/ci/config.yml
+      # - taskcat -c quickstart-aviatrix/ci/config.yml
   post_build:
     commands:
       - echo Entering the post_build phase...
