@@ -8,12 +8,11 @@
       "ParameterGroups" :
       [
         { "Label" : { "default": "Amazon EC2 Configuration" }, "Parameters" : [ "KeyPairName" ] },
-        { "Label" : { "default" : "VPC Configuration"}, "Parameters" : [ "VPCID", "AvailabilityZones", "PublicSubnet1CIDR", "PublicSubnet2CIDR" ] },
+        { "Label" : { "default" : "Existing VPC Configuration"}, "Parameters" : [ "VPCID", "PublicSubnet1CIDR", "PublicSubnet2CIDR", "AvailabilityZones" ] },
         { "Label" : { "default" : "Controller Information" }, "Parameters" : [ "AdminEmail", "Password", "ControllerSize" ] },
         { "Label" : { "default" : "Licensing Configuration"}, "Parameters" : [ "LicenseModel", "License" ] },
         { "Label" : { "default" : "Gateway Information" }, "Parameters" : [ "HubGWSize", "SpokeGWSize", "SpokeTag"] },
-        { "Label" : { "default" : "IAM Roles Information" }, "Parameters" : [ "OtherAccount", "OtherAccountRoleApp", "OtherAccountRoleEC2"] },
-        { "Label": { "default": "AWS Quick Start Configuration" }, "Parameters": [ "QSS3BucketName", "QSS3KeyPrefix" ] }
+        { "Label" : { "default" : "Optional 2nd AWS Account Configuration" }, "Parameters" : [ "OtherAccount", "OtherAccountRoleApp", "OtherAccountRoleEC2"] }
       ],
       "ParameterLabels" :
       {
@@ -32,9 +31,7 @@
         "SpokeTag" : { "default" : "Spoke VPC Tag Name" },
         "OtherAccount" : { "default" : "Second Account number"},
         "OtherAccountRoleApp" : { "default" : "ARN for Aviatrix-role-app on secondary account"},
-        "OtherAccountRoleEC2" : { "default" : "ARN for aviatrix-role-ec2 on secondary account"},
-        "QSS3BucketName": { "default": "Quick Start S3 Bucket Name" },
-        "QSS3KeyPrefix": { "default": "Quick Start S3 Key Prefix" }
+        "OtherAccountRoleEC2" : { "default" : "ARN for aviatrix-role-ec2 on secondary account"}
        }
     }
   },
@@ -101,32 +98,18 @@
     "OtherAccount" : {
         "Type" : "String",
         "Default" : "",
-        "Description" : "(Optional) Enter the number of the secondary AWS account where spokes will be deployed."
+        "Description" : "Enter the number of the secondary AWS account where spokes will be deployed."
      },
     "OtherAccountRoleApp" : {
        "Type" : "String",
        "Default" : "",
-       "Description" : "(Optional) Enter the ARN of the aviatrix-role-app on the secondary account where spokes will be deployed."
+       "Description" : "Enter the ARN of the aviatrix-role-app on the secondary account where spokes will be deployed."
     },
     "OtherAccountRoleEC2" : {
        "Type" : "String",
        "Default" : "",
-       "Description" : "(Optional) Enter the ARN of the Aviatrix-role-ec2 on the secondary account where spokes will be deployed."
-    },
-    "QSS3BucketName": {
-      "AllowedPattern": "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$",
-      "ConstraintDescription": "Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).",
-      "Default": "quickstart-reference",
-      "Description": "S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).",
-      "Type": "String"
-     },
-    "QSS3KeyPrefix": {
-       "AllowedPattern": "^[0-9a-zA-Z-/]*$",
-       "ConstraintDescription": "Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
-       "Default": "microsoft/activedirectory/latest/",
-       "Description": "S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/).",
-       "Type": "String"
-     }
+       "Description" : "Enter the ARN of the Aviatrix-role-ec2 on the secondary account where spokes will be deployed."
+    }
   },
   "Conditions" : {
     "NotBlankLicense" : { "Fn::Not" : [ { "Fn::Equals": [ { "Ref": "License" }, "" ] } ] },
