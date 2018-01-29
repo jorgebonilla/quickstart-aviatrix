@@ -8,7 +8,7 @@
       "ParameterGroups" :
       [
         { "Label" : { "default": "Amazon EC2 Configuration" }, "Parameters" : [ "KeyPairName" ] },
-        { "Label" : { "default" : "Existing VPC Configuration"}, "Parameters" : [ "VPCID", "PublicSubnet1CIDR", "PublicSubnet2CIDR", "AvailabilityZones" ] },
+        { "Label" : { "default" : "Existing VPC Configuration"}, "Parameters" : [ "VPCID", "PublicSubnet1CIDR", "PublicSubnet1", "PublicSubnet2CIDR", "PublicSubnet2", "AvailabilityZones" ] },
         { "Label" : { "default" : "Controller Information" }, "Parameters" : [ "AdminEmail", "Password", "ControllerSize" ] },
         { "Label" : { "default" : "Licensing Configuration"}, "Parameters" : [ "LicenseModel", "License" ] },
         { "Label" : { "default" : "Gateway Information" }, "Parameters" : [ "HubGWSize", "SpokeGWSize", "SpokeTag"] },
@@ -19,7 +19,9 @@
         "KeyPairName" : { "default" : "Which keypair will be used?" },
         "VPCID": { "default": "VPC ID" },
         "AvailabilityZones" : { "default": "Availability zones" },
+        "PublicSubnet1": { "default": "Public Subnet 1" },
         "PublicSubnet1CIDR": { "default": "Public Subnet 1 CIDR" },
+        "PublicSubnet2": { "default": "Public Subnet 2" },
         "PublicSubnet2CIDR": { "default": "Public Subnet 2 CIDR" },
         "AdminEmail" : { "default" : "Administrator email address?"},
         "Password" : { "default" : "Password for admin on Aviatrix Controller? " },
@@ -47,11 +49,23 @@
       "Description": "List of Availability Zones to use for the subnets in the VPC. Note: The logical order is preserved and only 2 AZs are used for this deployment.",
       "Type": "List<AWS::EC2::AvailabilityZone::Name>"
     },
+    "PublicSubnet1": {
+        "Type": "AWS::EC2::Subnet::Id"
+    },
     "PublicSubnet1CIDR": {
+        "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$",
+        "ConstraintDescription": "CIDR block parameter must be in the form x.x.x.x/16-28",
+        "Description": "CIDR Block for the public DMZ subnet 1 located in Availability Zone 1",
+        "Type": "String"
+    },
+    "PublicSubnet2": {
         "Type": "AWS::EC2::Subnet::Id"
     },
     "PublicSubnet2CIDR": {
-        "Type": "AWS::EC2::Subnet::Id"
+        "AllowedPattern": "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\\/(1[6-9]|2[0-8]))$",
+        "ConstraintDescription": "CIDR block parameter must be in the form x.x.x.x/16-28",
+        "Description": "CIDR Block for the public DMZ subnet 2 located in Availability Zone 2",
+        "Type": "String"
     },
     "AdminEmail": {
       "Type": "String",
@@ -172,7 +186,7 @@
         "NetworkInterfaces": [ {
           "DeviceIndex": "0",
           "GroupSet": [ { "Ref" : "AVXSG" } ],
-          "SubnetId": { "Ref" : "PublicSubnet1CIDR" }
+          "SubnetId": { "Ref" : "PublicSubnet1" }
         } ],
         "Tags": [
           { "Key": "Name", "Value": "Aviatrix Controller" },
