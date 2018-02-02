@@ -8,7 +8,7 @@
       "ParameterGroups" :
       [
         { "Label" : { "default": "Amazon EC2 Configuration" }, "Parameters" : [ "KeyPair" ] },
-        { "Label" : { "default" : "Existing VPC Configuration"}, "Parameters" : [ "VPCID", "PublicSubnet1CIDR", "PublicSubnet1", "PublicSubnet2CIDR", "PublicSubnet2", "AvailabilityZones" ] },
+        { "Label" : { "default" : "Existing VPC Configuration"}, "Parameters" : [ "VPCID", "PublicSubnet1CIDR", "PublicSubnet1", "PublicSubnet2CIDR", "PublicSubnet2" ] },
         { "Label" : { "default" : "Controller Information" }, "Parameters" : [ "AdminEmail", "Password", "ControllerSize" ] },
         { "Label" : { "default" : "Licensing Configuration"}, "Parameters" : [ "LicenseModel", "LicenseKey" ] },
         { "Label" : { "default" : "Gateway Information" }, "Parameters" : [ "HubGWSize", "SpokeGWSize", "SpokeTag"] },
@@ -18,7 +18,6 @@
       {
         "KeyPair" : { "default" : "Which keypair will be used" },
         "VPCID": { "default": "VPC ID" },
-        "AvailabilityZones" : { "default": "Availability zones" },
         "PublicSubnet1": { "default": "Public Subnet 1" },
         "PublicSubnet1CIDR": { "default": "Public Subnet 1 CIDR" },
         "PublicSubnet2": { "default": "Public Subnet 2" },
@@ -44,10 +43,6 @@
     },
     "VPCID": {
         "Type": "AWS::EC2::VPC::Id"
-    },
-    "AvailabilityZones": {
-      "Description": "List of Availability Zones to use for the subnets in the VPC. Note: The logical order is preserved and only 2 AZs are used for this deployment.",
-      "Type": "List<AWS::EC2::AvailabilityZone::Name>"
     },
     "PublicSubnet1": {
         "Type": "AWS::EC2::Subnet::Id"
