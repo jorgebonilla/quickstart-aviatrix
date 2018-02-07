@@ -136,7 +136,7 @@
       "us-east-1" : { "LicenseIncluded" : "ami-855463ff",  "BYOL": "ami-db9bb9a1" },
       "us-east-2" : { "LicenseIncluded" : "ami-9db399f8",  "BYOL": "ami-b40228d1" },
       "us-west-1" : { "LicenseIncluded" : "ami-ee1b168e",  "BYOL": "ami-2a7e7c4a" },
-      "us-west-2" : { "LicenseIncluded" : "	ami-baea56c2",  "BYOL": "ami-fd48f885" },
+      "us-west-2" : { "LicenseIncluded" : "ami-baea56c2",  "BYOL": "ami-fd48f885" },
       "ca-central-1" : { "LicenseIncluded" : "ami-a90184cd",  "BYOL": "ami-de4bceba" },
       "eu-central-1" : { "LicenseIncluded" : "ami-49c05926",  "BYOL": "ami-a025b9cf" },
       "eu-west-1" : { "LicenseIncluded" : "ami-5c99fc25",  "BYOL": "ami-830d93fa" },
