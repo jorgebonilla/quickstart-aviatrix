@@ -216,7 +216,9 @@ def delete_handler(event, context):
             for gateway in gateways:
                 logger.info('aviatrix-controller.py - Deleting gateway %s', gateway['vpc_name'])
                 controller.delete_gateway('1',gateway['vpc_name'])
+        logger.info('Waiting for controller to be completely done')
         time.sleep(30)
+        logger.info('Sending CFT response Signal')
         responseData = {
             "PhysicalResourceId": "arn:aws:fake:myID"
         }

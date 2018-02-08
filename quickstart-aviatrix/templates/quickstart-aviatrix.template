@@ -216,6 +216,7 @@
     },
     "CreateAviatrixAssumeRolePolicy" : {
       "Condition": "CreateIamRoleCondition",
+      "DependsOn": [ "AviatrixRoleEC2", "AviatrixRoleApp" ],
       "Type" : "AWS::IAM::ManagedPolicy",
       "Properties" :
       {
@@ -245,6 +246,7 @@
     },
     "CreateAviatrixAppPolicy" : {
       "Condition": "CreateIamRoleCondition",
+      "DependsOn": [ "AviatrixRoleEC2", "AviatrixRoleApp" ],
       "Type" : "AWS::IAM::ManagedPolicy",
       "Properties" :
       {
@@ -429,7 +431,7 @@
     },
     "AviatrixInstanceProfile": {
       "Condition": "CreateIamRoleCondition",
-      "DependsOn": [ "AviatrixRoleEC2" ],
+      "DependsOn": [ "AviatrixRoleEC2", "CreateAviatrixAssumeRolePolicy", "CreateAviatrixAppPolicy" ],
       "Type": "AWS::IAM::InstanceProfile",
       "Properties": {
         "InstanceProfileName": "aviatrix-role-ec2",
@@ -443,7 +445,7 @@
    		"Properties" : {}
     },
     "IamRoleWaitHandle": {
-    	"DependsOn": [ "AviatrixRoleEC2", "AviatrixRoleApp" ],
+    	"DependsOn": [ "AviatrixRoleEC2", "AviatrixRoleApp", "CreateAviatrixAssumeRolePolicy", "CreateAviatrixAppPolicy" ],
     	"Condition": "CreateIamRoleCondition",
     	"Type" : "AWS::CloudFormation::WaitConditionHandle",
    		"Properties" : {}
@@ -476,7 +478,7 @@
       }
     },
     "AVXController" : {
-      "DependsOn" : [ "AVXSG", "WaitCondition" ],
+      "DependsOn" : [ "AVXSG", "AviatrixInstanceProfile", "WaitCondition" ],
       "Type" : "AWS::EC2::Instance",
       "Properties" : {
         "ImageId" : { "Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region" }, { "Ref": "LicenseModel" } ] },
@@ -594,7 +596,7 @@
       "Type": "AWS::SQS::Queue"
     },
     "AVXControllerLambda": {
-      "DependsOn": "AVXEIP",
+      "DependsOn": [ "AVXEIP", "AVXRoleAPI", "AVXAPIRolePolicy", "AVXKey", "AVXGWQueue", "AVXGWTopic" ],
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Handler": "aviatrix_controller.handler",
@@ -683,6 +685,7 @@
       }
     },
     "AVXControllerLambdaTrigger": {
+      "DependsOn": "AVXControllerLambda",
       "Type": "Custom::ControllerLamdbdaTrigger",
       "Properties": {
         "ServiceToken": {
@@ -694,7 +697,7 @@
       }
     },
     "AVXGatewayLambda": {
-      "DependsOn": "AVXEIP",
+      "DependsOn": [ "AVXEIP", "AVXRoleAPI","AVXAPIRolePolicy", "AVXKey" ],
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Handler": "aviatrix_gateway.handler",
@@ -750,6 +753,7 @@
       }
     },
     "AVXGWTopic": {
+      "DependsOn": "AVXGatewayLambda",
       "Type": "AWS::SNS::Topic",
       "Properties": {
         "Subscription": [{
@@ -761,6 +765,7 @@
       }
     },
     "InvokeGWLambda": {
+      "DependsOn": [ "AVXGWTopic", "AVXGatewayLambda" ],
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -774,6 +779,7 @@
       }
     },
     "AVXPollerLambda": {
+      "DependsOn": [ "AVXGWQueue", "AVXGWTopic" ],
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Handler": "aviatrix_poller.handler",
@@ -819,6 +825,7 @@
       }
     },
     "AVXPollerEvent": {
+      "DependsOn": "AVXPollerLambda",
       "Type": "AWS::Events::Rule",
       "Properties": {
         "Description": "Rule to trigger AviatrixPoller every 2 minutes to find VPCs that need to be attached to the Transit Hub VPC.",
@@ -835,6 +842,7 @@
       }
     },
     "AVXPollerEventPerm": {
+      "DependsOn": "AVXPollerEvent",
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "FunctionName": {
