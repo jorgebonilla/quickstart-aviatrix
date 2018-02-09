@@ -56,6 +56,14 @@
         "ParameterValue": "aviatrix-spoke"
     },
     {
+        "ParameterKey": "CreateIamRole",
+        "ParameterValue": "Yes"
+    },
+    {
+        "ParameterKey": "ParentAccountID",
+        "ParameterValue": ""
+    },
+    {
         "ParameterKey": "OtherAccount",
         "ParameterValue": ""
     },
