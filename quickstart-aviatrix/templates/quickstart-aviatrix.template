@@ -432,7 +432,7 @@
    		"Properties" : {}
     },
     "IamRoleWaitHandle": {
-    	"DependsOn": [ "AviatrixRoleEC2", "AviatrixRoleApp", "CreateAviatrixAssumeRolePolicy", "CreateAviatrixAppPolicy" ],
+    	"DependsOn": [ "AviatrixRoleEC2", "AviatrixRoleApp", "CreateAviatrixAssumeRolePolicy", "CreateAviatrixAppPolicy", "AviatrixInstanceProfile" ],
     	"Condition": "CreateIamRoleCondition",
     	"Type" : "AWS::CloudFormation::WaitConditionHandle",
    		"Properties" : {}
@@ -465,7 +465,7 @@
       }
     },
     "AVXController" : {
-      "DependsOn" : [ "AVXSG", "AviatrixInstanceProfile", "WaitCondition" ],
+      "DependsOn" : [ "AVXSG", "WaitCondition" ],
       "Type" : "AWS::EC2::Instance",
       "Properties" : {
         "ImageId" : { "Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region" }, { "Ref": "LicenseModel" } ] },
