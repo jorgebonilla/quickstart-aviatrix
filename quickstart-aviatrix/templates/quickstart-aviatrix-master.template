@@ -12,7 +12,7 @@
         { "Label" : { "default" : "Controller Information" }, "Parameters" : [ "AdminEmail", "Password", "ControllerSize" ] },
         { "Label" : { "default" : "Licensing Configuration"}, "Parameters" : [ "LicenseModel", "LicenseKey" ] },
         { "Label" : { "default" : "Gateway Information" }, "Parameters" : [ "HubGWSize", "SpokeGWSize", "SpokeTag"] },
-        { "Label" : { "default" : "IAM Roles" }, "Parameters" : [ "CreateIamRole", "ParentAccountID"] },
+        { "Label" : { "default" : "IAM Roles" }, "Parameters" : [ "CreateIamRole" ] },
         { "Label" : { "default" : "Optional 2nd AWS Account Configuration" }, "Parameters" : [ "OtherAccount", "OtherAccountRoleApp", "OtherAccountRoleEC2"] },
         { "Label": { "default": "AWS Quick Start Configuration" }, "Parameters": [ "QSS3BucketName", "QSS3KeyPrefix" ] }
       ],
@@ -32,7 +32,6 @@
         "SpokeGWSize" : { "default" : "Aviatrix Spoke Gateways instance type" },
         "SpokeTag" : { "default" : "Spoke VPC Tag Name" },
         "CreateIamRole" : { "default" : "Create the IAM roles"},
-        "ParentAccountID" : { "default" : "Parent AWS account? (optional)" },
         "OtherAccount" : { "default" : "Second Account number"},
         "OtherAccountRoleApp" : { "default" : "ARN for Aviatrix-role-app on secondary account"},
         "OtherAccountRoleEC2" : { "default" : "ARN for aviatrix-role-ec2 on secondary account"},
@@ -119,7 +118,6 @@
       "AllowedValues" : ["Yes","No"],
       "Description" : "Create an IAM roles?"
     },
-    "ParentAccountID": { "Type": "String", "Description": "Parent AWS AccountId" },
     "OtherAccount" : {
         "Type" : "String",
         "Default" : "",
@@ -259,7 +257,6 @@
             "SpokeGWSize": { "Ref": "SpokeGWSize"},
             "SpokeTag": { "Ref": "SpokeTag"},
             "CreateIamRole" : { "Ref" : "CreateIamRole"},
-            "ParentAccountID" : { "Ref" : "ParentAccountID" },
             "OtherAccount": { "Ref": "OtherAccount"},
             "OtherAccountRoleApp": { "Ref": "OtherAccountRoleApp"},
             "OtherAccountRoleEC2": { "Ref": "OtherAccountRoleEC2"}

@@ -60,10 +60,6 @@
         "ParameterValue": "Yes"
     },
     {
-        "ParameterKey": "ParentAccountID",
-        "ParameterValue": ""
-    },
-    {
         "ParameterKey": "OtherAccount",
         "ParameterValue": ""
     },
