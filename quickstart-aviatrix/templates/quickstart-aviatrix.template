@@ -110,7 +110,7 @@
       "Type" : "String",
       "Default" : "Yes",
       "AllowedValues" : ["Yes","No"],
-      "Description" : "Create an IAM roles?"
+      "Description" : "Create an IAM roles"
     },
     "OtherAccount" : {
         "Type" : "String",
